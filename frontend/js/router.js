@@ -20,6 +20,7 @@ const routes = [
   { path: 'admin/practical/new', render: (app, params, user) => renderAdmin('practicalNew', params, user), roles: ['admin'] },
   { path: 'admin/practical/:id/edit', render: (app, params, user) => renderAdmin('practicalEdit', params, user), roles: ['admin'] },
   { path: 'admin/students', render: (app, params, user) => renderAdmin('students', params, user), roles: ['admin'] },
+  { path: 'admin/enrollments', render: (app, params, user) => renderAdmin('enrollments', params, user), roles: ['admin'] },
   { path: 'admin/activities', render: (app, params, user) => renderAdmin('activities', params, user), roles: ['admin'] },
 ];
 

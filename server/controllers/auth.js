@@ -24,7 +24,7 @@ async function register(req, res) {
   const email = String(in_.email || '').trim().toLowerCase();
   const username = String(in_.username || '').trim();
   const pw = String(in_.password || '');
-  const enrollment = String(in_.enrollment || '').trim();
+  const enrollment = String(in_.enrollment || '').trim().toUpperCase();
 
   if (name.length < 2) return res.status(400).json({ error: 'Please enter your full name.' });
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
@@ -34,7 +34,24 @@ async function register(req, res) {
   if (!validPassword(pw)) {
     return res.status(400).json({ error: 'Password must be at least 8 characters and include a letter and a digit.' });
   }
-  if (enrollment !== '' && enrollment.length > 60) return res.status(400).json({ error: 'Enrollment number is too long.' });
+  if (enrollment === '') return res.status(400).json({ error: 'Enrollment number is required.' });
+  if (!/^[A-Z0-9-]{6,30}$/.test(enrollment)) {
+    return res.status(400).json({ error: 'Please enter a valid enrollment number.' });
+  }
+
+  // Enrollment numbers are verified against the official college list uploaded
+  // by the administrator. We deliberately do not hard-code a year/series because
+  // different academic batches can have different enrollment-number patterns.
+  const approvedEnrollment = await db.findOne('enrollments', { enrollmentNo: enrollment });
+  if (!approvedEnrollment) {
+    return res.status(403).json({ error: 'Enrollment number is not in the approved college enrollment list. Please contact your faculty administrator.' });
+  }
+  if (approvedEnrollment.status && !['active', 'admitted'].includes(String(approvedEnrollment.status).toLowerCase())) {
+    return res.status(403).json({ error: 'This enrollment is not currently eligible for registration.' });
+  }
+
+  const dupEnrollment = await db.findOne('users', { enrollment });
+  if (dupEnrollment) return res.status(409).json({ error: 'This enrollment number is already registered.' });
 
   const dup = await db.findOne('users', { $or: [{ username }, { email }] });
   if (dup) return res.status(409).json({ error: 'Username or email is already registered.' });
@@ -48,6 +65,8 @@ async function register(req, res) {
       passwordHash: hashPassword(pw),
       role: 'student',
       enrollment,
+      batch: approvedEnrollment.batch || '',
+      program: approvedEnrollment.program || '',
       mustChangePassword: false,
       createdAt: now(),
       updatedAt: now(),
@@ -70,7 +89,7 @@ async function register(req, res) {
 
   return res.status(201).json({
     message: 'Registration successful. You can now log in.',
-    user: { id, name, username, email, role: 'student' },
+    user: { id, name, username, email, role: 'student', enrollment, batch: approvedEnrollment.batch || '' },
   });
 }
 

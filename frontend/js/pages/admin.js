@@ -15,6 +15,7 @@ const adminNav = [
   { href: 'admin', label: 'Dashboard', icon: I.dash },
   { href: 'admin/practicals', label: 'Practicals', icon: I.book },
   { href: 'admin/students', label: 'Students', icon: I.users },
+  { href: 'admin/enrollments', label: 'Enrollment List', icon: I.users },
   { href: 'admin/activities', label: 'Activity Log', icon: I.activity },
   { href: 'dashboard', label: '← Student View', icon: I.flask },
 ];
@@ -41,6 +42,7 @@ export async function renderAdmin(section, params, user) {
       else if (section === 'practicalNew') await pageEditor(view, null);
       else if (section === 'practicalEdit') await pageEditor(view, params.id);
       else if (section === 'students') await pageStudents(view);
+      else if (section === 'enrollments') await pageEnrollments(view);
       else if (section === 'activities') await pageActivities(view);
     } catch (e) {
       if (e.data && e.data.code === 'PASSWORD_CHANGE_REQUIRED') {
@@ -108,6 +110,7 @@ async function pageDashboard(view) {
       <div class="crumb">Manage the entire laboratory content — changes are saved to the laboratory data and every student sees them after refresh/login.</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn btn-outline" href="#/admin/practicals">${I.edit} Manage Practicals</a>
+        <a class="btn btn-outline" href="#/admin/enrollments">${I.users} Enrollment List</a>
         <a class="btn btn-primary" href="#/admin/practical/new">${I.plus} Add Practical</a>
       </div></div>
     <div class="grid grid-4" style="margin-bottom:24px">
@@ -536,6 +539,91 @@ async function pageEditor(view, id) {
   render();
 }
 
+// ------------------------------------------------------------ enrollment management
+async function pageEnrollments(view) {
+  view.innerHTML = `
+    <div class="page-head"><div><h1>Enrollment Management</h1>
+      <div class="crumb">Import the official college enrollment list once per academic batch. Students can then register automatically without individual approval.</div></div>
+      <a class="btn btn-outline" href="#/admin/students">${I.users} Students</a></div>
+    <div class="grid grid-2" style="align-items:start">
+      <div class="panel">
+        <div class="panel-head"><span>Import Academic Batch</span></div>
+        <div style="padding:18px">
+          <p class="muted small">Upload a CSV file supplied by the college. Existing enrollment numbers are updated; new ones are added. No code or Render changes are needed for future batches.</p>
+          <div class="field"><label>CSV file</label><input class="input" id="enroll-file" type="file" accept=".csv,text/csv"></div>
+          <div class="small muted" style="margin:8px 0 14px">Required columns: <b>enrollmentNo, studentName, batch</b>. Optional: <b>program, status</b>.</div>
+          <button class="btn btn-primary" id="import-enroll">Import Enrollment List</button>
+          <button class="btn btn-outline" id="download-template" style="margin-left:8px">Download CSV Template</button>
+          <div id="import-result" class="small" style="margin-top:14px"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span>How it works</span></div>
+        <div style="padding:18px" class="small">
+          <ol style="margin:0;padding-left:20px;line-height:1.8">
+            <li>College gives the faculty the official enrollment list.</li>
+            <li>Faculty uploads it here once for the academic batch.</li>
+            <li>Students enter their enrollment number during registration.</li>
+            <li>The system checks the approved list automatically.</li>
+            <li>Valid students register immediately — no per-student approval.</li>
+          </ol>
+          <div class="hint" style="margin-top:14px">Different batches can use different enrollment-number series. The system does not hard-code a year pattern; the official uploaded list is the source of truth.</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-head"><span>Approved Enrollment Records</span><span class="spacer"></span><input class="input" id="enroll-search" placeholder="Filter by batch…" style="width:200px"></div>
+      <div class="table-wrap"><table class="tbl"><thead><tr><th>Enrollment No.</th><th>Student Name</th><th>Batch</th><th>Program</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody id="enroll-rows"><tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Loading…</td></tr></tbody></table></div>
+    </div>`;
+
+  const file = view.querySelector('#enroll-file');
+  const result = view.querySelector('#import-result');
+  const tbody = view.querySelector('#enroll-rows');
+  const search = view.querySelector('#enroll-search');
+
+  function parseCSV(text) {
+    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim() !== '');
+    if (!lines.length) throw new Error('CSV file is empty.');
+    const parseLine = (line) => {
+      const out=[]; let cur='', quoted=false;
+      for(let i=0;i<line.length;i++) { const c=line[i]; if(c==='"' && line[i+1]==='"'){cur+='"';i++;} else if(c==='"'){quoted=!quoted;} else if(c===',' && !quoted){out.push(cur.trim());cur='';} else cur+=c; }
+      out.push(cur.trim()); return out;
+    };
+    const headers=parseLine(lines[0]).map(h=>h.toLowerCase().replace(/\s+/g,'').replace(/_/g,''));
+    const rows=[];
+    for(let i=1;i<lines.length;i++){ const vals=parseLine(lines[i]); const r={}; headers.forEach((h,j)=>r[h]=vals[j]||''); rows.push(r); }
+    return rows.map(r=>({ enrollmentNo:r.enrollmentno||r.enrollmentnumber||r.enrollment||'', studentName:r.studentname||r.name||'', batch:r.academicbatch||r.batch||'', program:r.program||'', status:r.status||'active' }));
+  }
+
+  view.querySelector('#download-template').onclick = () => {
+    const blob = new Blob(['enrollmentNo,studentName,batch,program,status\n240230106001,Example Student,2024,Computer Engineering,active\n'], {type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='enrollment-template.csv'; a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  view.querySelector('#import-enroll').onclick = async () => {
+    if(!file.files[0]) { toast('Please select a CSV file first.','error'); return; }
+    const btn=view.querySelector('#import-enroll'); btn.disabled=true; btn.textContent='Importing…'; result.textContent='';
+    try {
+      const text=await file.files[0].text(); const rows=parseCSV(text);
+      const data=await API.post('/admin/enrollments/import',{rows});
+      result.innerHTML=`<span style="color:var(--success)">${esc(data.message||'Import completed.')}</span>` + (data.errors?.length ? `<div style="color:var(--danger);margin-top:6px">${data.errors.slice(0,8).map(esc).join('<br>')}${data.errors.length>8?'<br>…':''}</div>`:'');
+      await load();
+      toast('Enrollment list imported.','success');
+    } catch(err) { result.innerHTML=`<span style="color:var(--danger)">${esc(err.message)}</span>`; }
+    finally { btn.disabled=false; btn.textContent='Import Enrollment List'; }
+  };
+
+  async function load(){
+    tbody.innerHTML='<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Loading…</td></tr>';
+    const data=await API.get('/admin/enrollments'+(search.value?'?batch='+encodeURIComponent(search.value):''));
+    const rows=data.enrollments||[];
+    tbody.innerHTML=rows.map(r=>`<tr data-id="${r._id}"><td><b>${esc(r.enrollmentNo)}</b></td><td>${esc(r.studentName||'—')}</td><td>${esc(r.batch)}</td><td>${esc(r.program||'—')}</td><td>${esc(r.status||'active')}</td><td style="text-align:right"><button class="btn btn-sm btn-ghost" data-del="1" style="color:var(--danger)">${I.trash}</button></td></tr>`).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">No enrollment records found.</td></tr>';
+  }
+  search.addEventListener('input',()=>{clearTimeout(search._t);search._t=setTimeout(load,250);});
+  tbody.addEventListener('click',async e=>{const b=e.target.closest('[data-del]');if(!b)return;const tr=b.closest('tr');if(!await confirmDialog('Remove Enrollment','Remove '+esc(tr.children[0].textContent)+' from the approved list? Existing student accounts are not deleted.','Remove'))return;try{await API.del('/admin/enrollments/'+tr.dataset.id);tr.remove();toast('Enrollment removed.','success');}catch(err){toast(err.message,'error');}});
+  await load();
+}
+
 // ------------------------------------------------------------ students
 async function pageStudents(view) {
   view.innerHTML = '<div class="muted">Loading students…</div>';
@@ -555,7 +643,7 @@ async function pageStudents(view) {
 
   view.innerHTML = `
     <div class="page-head"><div><h1>Student Management</h1>
-      <div class="crumb">View registered students, reset passwords and remove accounts</div></div></div>
+      <div class="crumb">View registered students, reset passwords and remove accounts</div></div><a class="btn btn-primary" href="#/admin/enrollments">Manage Enrollment List</a></div>
     <div class="panel"><div class="table-wrap"><table class="tbl">
       <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Enrollment</th><th>Completed</th><th>Registered</th><th>Last login</th><th style="text-align:right">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;

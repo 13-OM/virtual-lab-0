@@ -105,3 +105,7 @@ Database: `virtual_lab`
 All mutating requests require the `X-CSRF-Token` header. All admin routes are
 enforced server-side by role — hiding the link in the UI is not the security
 mechanism.
+
+
+### enrollments
+Official college enrollment allow-list maintained by faculty. Fields: `enrollmentNo` (unique), `studentName`, `batch`, `program`, `status` (`active`, `admitted`, `alumni`, `inactive`), timestamps, and `updatedBy`. Student registration checks this collection; the application does not hard-code academic-year enrollment series.

@@ -70,6 +70,7 @@ async function load(dataFile) {
     practicals: database.collection('practicals'),
     progress: database.collection('progress'),
     activities: database.collection('activities'),
+    enrollments: database.collection('enrollments'),
   };
 
   await Promise.all([
@@ -81,6 +82,8 @@ async function load(dataFile) {
     ),
     collections.activities.createIndex({ createdAt: -1 }, { name: 'activities_createdAt' }),
     collections.activities.createIndex({ userId: 1, createdAt: -1 }, { name: 'activities_user_createdAt' }),
+    collections.enrollments.createIndex({ enrollmentNo: 1 }, { unique: true, name: 'uniq_enrollment_number' }),
+    collections.enrollments.createIndex({ batch: 1 }, { name: 'enrollments_batch' }),
     collections.practicals.createIndex(
       { practicalNumber: 1 },
       { unique: true, name: 'uniq_practical_number' }

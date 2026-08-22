@@ -90,8 +90,9 @@ export function renderRegister(app) {
           <div class="hint">3–20 characters (letters, digits, underscore)</div>
         </div>
         <div class="field">
-          <label>Enrollment No. <span class="muted">(optional)</span></label>
-          <input class="input" name="enrollment">
+          <label>Enrollment No. <span class="muted">(required)</span></label>
+          <input class="input" name="enrollment" required maxlength="30" autocomplete="off">
+          <div class="hint">Enter the official college enrollment number. It is verified against the current approved enrollment list.</div>
         </div>
       </div>
       <div class="two-col">

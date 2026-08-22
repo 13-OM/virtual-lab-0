@@ -251,6 +251,70 @@ async function studentDelete(req, res) {
   return res.json({ message: `Student ${u.name} removed.` });
 }
 
+// ---------------------------------------------------------------- enrollment management
+
+/** GET /api/admin/enrollments?batch=2026 */
+async function enrollments(req, res) {
+  const batch = String(req.query.batch || '').trim();
+  const filter = batch ? { batch: { $regex: batch } } : {};
+  const rows = await db.find('enrollments', filter, { sort: { batch: 1, enrollmentNo: 1 } });
+  return res.json({ enrollments: rows });
+}
+
+/** POST /api/admin/enrollments/import — import official college CSV rows. */
+async function importEnrollments(req, res) {
+  const rows = Array.isArray(req.body && req.body.rows) ? req.body.rows : [];
+  if (!rows.length) return res.status(400).json({ error: 'No enrollment rows were provided.' });
+  if (rows.length > 5000) return res.status(400).json({ error: 'A single import can contain at most 5,000 rows.' });
+
+  let added = 0, updated = 0, skipped = 0;
+  const errors = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i] || {};
+    const enrollmentNo = String(r.enrollmentNo || r.enrollment || r['Enrollment No'] || r['Enrollment Number'] || '').trim().toUpperCase();
+    const studentName = String(r.studentName || r.name || r['Student Name'] || '').trim();
+    const batch = String(r.batch || r['Academic Batch'] || r['Batch'] || '').trim();
+    const program = String(r.program || r['Program'] || '').trim();
+    const status = String(r.status || r['Status'] || 'active').trim().toLowerCase() || 'active';
+
+    if (!enrollmentNo) { errors.push(`Row ${i + 2}: enrollment number is missing.`); continue; }
+    if (!/^[A-Z0-9-]{6,30}$/.test(enrollmentNo)) { errors.push(`Row ${i + 2}: invalid enrollment number "${enrollmentNo}".`); continue; }
+    if (!batch) { errors.push(`Row ${i + 2}: academic batch is missing for ${enrollmentNo}.`); continue; }
+    if (!['active', 'admitted', 'alumni', 'inactive'].includes(status)) { errors.push(`Row ${i + 2}: invalid status for ${enrollmentNo}. Use active, admitted, alumni or inactive.`); continue; }
+
+    const existing = await db.findOne('enrollments', { enrollmentNo });
+    const doc = {
+      enrollmentNo,
+      studentName,
+      batch,
+      program,
+      status,
+      updatedAt: now(),
+      updatedBy: req.user.username,
+    };
+    if (existing) {
+      await db.update('enrollments', { _id: existing._id }, doc);
+      updated++;
+    } else {
+      await db.insert('enrollments', { ...doc, createdAt: now() });
+      added++;
+    }
+  }
+
+  await logActivityFor('import_enrollments', { added, updated, skipped, errors: errors.length }, req.user);
+  return res.json({ message: `Enrollment import complete: ${added} added, ${updated} updated.`, added, updated, skipped, errors });
+}
+
+/** DELETE /api/admin/enrollments/{id} */
+async function enrollmentDelete(req, res) {
+  const row = await db.findOne('enrollments', { _id: req.params.id });
+  if (!row) return res.status(404).json({ error: 'Enrollment record not found.' });
+  await db.deleteOne('enrollments', { _id: row._id });
+  await logActivityFor('delete_enrollment', { enrollmentNo: row.enrollmentNo, batch: row.batch }, req.user);
+  return res.json({ message: `Enrollment ${row.enrollmentNo} removed from the approved list.` });
+}
+
 // ---------------------------------------------------------------- helpers
 
 function validatePracticalInput(in_) {
@@ -286,7 +350,7 @@ function validatePracticalInput(in_) {
 }
 
 module.exports = {
-  stats, activities,
+  stats, activities, enrollments, importEnrollments, enrollmentDelete,
   practicals, practicalGet, practicalCreate, practicalUpdate, practicalDelete,
   reorder, history, restore,
   students, studentResetPassword, studentDelete,

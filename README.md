@@ -138,3 +138,16 @@ The default admin is marked to require a password change. Change the password be
 - Server-side admin authorization is enforced on every admin endpoint.
 - MongoDB credentials exist only in server environment variables.
 - The frontend uses same-origin `/api/...` requests; do not deploy the frontend separately unless you intentionally add a different API base URL and cross-origin authentication configuration.
+
+
+## Academic-batch enrollment verification
+
+Student registration now requires an enrollment number that exists in the administrator-managed `enrollments` collection. The system does not hard-code an enrollment-number series, so different academic batches can use different formats/series.
+
+Faculty can open **Admin → Enrollment List** and import the official college CSV once per academic batch. Required CSV columns are `enrollmentNo,studentName,batch`; optional columns are `program,status`. Existing enrollment numbers are updated and new numbers are added. Students can then register automatically without individual approval.
+
+Example CSV:
+```csv
+enrollmentNo,studentName,batch,program,status
+240230106001,Example Student,2024,Computer Engineering,active
+```
