@@ -1,0 +1,20 @@
+{
+  "name": "virtual-lab",
+  "version": "2.0.0",
+  "description": "Interactive Virtual Laboratory & Practical Simulator \u2014 Node.js + Express + MongoDB Atlas",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "seed": "node server/seed.js",
+    "seed:force": "node server/seed.js --force",
+    "test": "bash tests/api_smoke.sh http://127.0.0.1:8080"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "mongodb": "^6.18.0"
+  }
+}

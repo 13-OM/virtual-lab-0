@@ -1,0 +1,15 @@
+# Node dependencies
+node_modules/
+
+# Runtime secrets
+.env
+.env.*
+!.env.example
+data/.secret
+
+# Runtime/local database exports
+# Keep data/seed/practicals.json tracked; do not commit live user data.
+data/vlab.json
+
+# Logs
+*.log

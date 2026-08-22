@@ -1,0 +1,3366 @@
+{
+  "practicals": [
+    {
+      "practicalNumber": 1,
+      "title": "Write a C program to implement the lexical analyzer",
+      "shortDescription": "LEX program that reads a string and classifies each token as keyword, number or word.",
+      "language": "LEX (flex)",
+      "aim": "Write a C program to implement the lexical analyzer.",
+      "objective": "(a) to understand working of lexical analyzer\n(b) to understand implantation of lexical analyzer.",
+      "theory": "Lexical analysis, often referred to as the first phase of a compiler or interpreter, plays a crucial role in the process of translating high-level programming languages into machine-readable code. Its primary function is to break down the source code into a stream of tokens or lexemes, which are the smallest meaningful units in a programming language. These tokens can include keywords (e.g., \"if,\" \"while\"), identifiers (e.g., variable names), literals (e.g., numbers, strings), and symbols (e.g., operators, punctuation).\n\nThe lexical analysis phase typically involves a scanner, which reads the source code character by character and groups them into tokens based on predefined rules and regular expressions. The output of lexical analysis is a stream of tokens with class the tokens belongs to.\n\nIn this LEX program, the rules section lists three patterns: the keyword rule (if | else | printf), the number rule [0-9]+, and the word rule [a-zA-Z]+. The pattern .|\\n with the action ECHO copies every unmatched character (space, newline, punctuation) straight to the output. When the input is scanned, every sequence of letters is reported as a word, every digit sequence as a number, and the reserved words if/else/printf as keywords.\n\n--- Additional observation from the lab manual (Observations 2) ---\nA second LEX program in the manual demonstrates a simple pattern:\n\n%{\n#include<stdio.h>\n%}\n%%\nhello {printf(\"hello world\\n\");}\n%%\nint yywrap()\n{\n         return 1;\n}\nint main()\n{\n         printf(\"enter hello\");\n         yylex();\n         return 0;\n}\n\nIts output is: enter hello hello → hello world\n\n--- Quiz (from the lab manual) ---\nQ1. What is output of lexical analyzer?\nThe lexical analyzer: Reads the source program character by character; Groups characters into meaningful lexemes; Produces tokens for the syntax analyzer (parser).\n\nQ2. What type of error is identified by lexical analyzer?\nA lexical analyzer identifies lexical errors, such as invalid characters, incorrect keywords, or malformed tokens in the source code.\n\nQ3. How does the output of lexical analyzer is used?\nThe output of the lexical analyzer is used by the syntax analyzer (parser) to check the grammatical structure of the program.",
+      "algorithm": "1. Start the LEX specification with %{ ... %} and include stdio.h.\n2. Begin the rules section with %%.\n3. Rule 1: the keywords if, else and printf (written with | alternation) — print \"... is a keyword\".\n4. Rule 2: [0-9]+ (one or more digits) — print \"... is a number\".\n5. Rule 3: [a-zA-Z]+ (one or more letters) — print \"... is a word\".\n6. Rule 4: .|\\n with the action ECHO — copy every other character (spaces, newlines) to the output unchanged.\n7. End the rules with %% and write main(): print a prompt, then call yylex().\n8. Write yywrap() returning 1 so the scanner terminates at end of input.",
+      "procedure": "1. Create a file (e.g. 1.l) and enter the source code shown below exactly as given.\n2. Generate the scanner: flex 1.l  (produces lex.yy.c)\n3. Compile: gcc lex.yy.c  (produces a.exe on Windows / a.out on Linux)\n4. Run: a.exe\n5. Enter the string: this is first pr\n6. Observe that every word is reported: \"this is a word is is a word first is a word pr is a word\".",
+      "sourceCode": "%{\n#include<stdio.h>\n%}\n\n%%\nif       |\nelse     |\nprintf {printf(\"%s is a keyword\",yytext);}\n[0-9]+ {printf(\"%s is a number\",yytext);}\n[a-zA-Z]+ {printf(\"%s is a word\",yytext);}\n.|\\n {ECHO;}\n%%\n\nint main(){\n        printf(\"\\n Enter the string:\");\n        yylex();\n}\n\nint yywrap(){\n        return 1;\n}",
+      "expectedOutput": "Enter the string:this is first pr\nthis is a word is is a word first is a word pr is a word",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input buffer",
+            "kind": "text"
+          },
+          {
+            "key": "position",
+            "label": "Position",
+            "kind": "num"
+          },
+          {
+            "key": "yytext",
+            "label": "Matched text (yytext)",
+            "kind": "text"
+          },
+          {
+            "key": "rule",
+            "label": "Matched rule",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "this is first pr\\n",
+          "position": 0,
+          "yytext": "",
+          "rule": "—"
+        },
+        "steps": [
+          {
+            "line": 5,
+            "what": "The rules section begins with %%. The scanner is now ready to read the input buffer character by character.",
+            "why": "Every LEX program needs the rules section (patterns + actions) separated from the definitions by %%.",
+            "how": "yylex() starts scanning from position 0, trying to match the longest possible prefix of the input against the patterns.",
+            "result": "The scanner is ready; nothing has been processed yet.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "—"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 6,
+            "what": "The keyword rule begins: the pattern \"if\" with a trailing | (alternation).",
+            "why": "A | at the end of a pattern line means the pattern continues on the next line — the three lines together form one rule: if | else | printf.",
+            "how": "The scanner checks whether \"this\" matches any alternative of the keyword rule. \"this\" is not \"if\", so no match.",
+            "result": "The keyword rule cannot match the current token \"this\"; scanning continues with the next rule.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "—"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "The next alternative of the keyword rule: \"else\".",
+            "why": "Every alternative of the pattern is tried; if any one matches, the whole rule fires.",
+            "how": "\"this\" is not \"else\" either, so this alternative does not match.",
+            "result": "Still no match for the keyword rule.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "The third alternative \"printf\" with its action: print \"… is a keyword\".",
+            "why": "The pattern \"printf\" must be matched before the action {printf(...)} can run. \"this\" is not \"printf\".",
+            "how": "The scanner has now checked the complete keyword rule; none of its alternatives matched \"this\".",
+            "result": "The token \"this\" is definitely not a keyword; the number rule is tried next.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "output": ""
+          },
+          {
+            "line": 9,
+            "what": "The number rule [0-9]+ matches one or more digits.",
+            "why": "Numbers must be recognised as a separate token class, so they are not mixed with words.",
+            "how": "\"this\" starts with the letter t, so the digit class [0-9] cannot match.",
+            "result": "The token \"this\" is not a number; the word rule is tried next.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "keyword: if|else|printf (no match)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "[0-9]+ (no match)"
+            },
+            "output": ""
+          },
+          {
+            "line": 10,
+            "what": "The word rule [a-zA-Z]+ matches one or more letters. It matches \"this\".",
+            "why": "Every sequence of letters forms one word token — this is the rule that handles identifiers and ordinary words.",
+            "how": "The longest match starting at position 0 is \"this\" (4 letters). yytext becomes \"this\", the action prints \"this is a word\", and the scanner advances by 4 characters.",
+            "result": "The first word is reported; position moves from 0 to 4.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 0,
+              "yytext": "",
+              "rule": "[0-9]+ (no match)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 4,
+              "yytext": "this",
+              "rule": "[a-zA-Z]+"
+            },
+            "output": "this is a word"
+          },
+          {
+            "line": 11,
+            "what": "The pattern .|\\n matches the space at position 4; the action ECHO copies it to the output.",
+            "why": "Spaces and newlines carry no token meaning, but they must still be copied so the output keeps the original spacing.",
+            "how": "The dot matches any single character except newline. ECHO writes the matched character (a space) straight to the output. The scanner advances by 1.",
+            "result": "The space is echoed; position moves from 4 to 5.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 4,
+              "yytext": "this",
+              "rule": "[a-zA-Z]+"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 5,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "output": "[space]"
+          },
+          {
+            "line": 10,
+            "what": "The word rule [a-zA-Z]+ matches the word \"is\".",
+            "why": "Each separate letter sequence is a new token, so every word must be reported again.",
+            "how": "yytext = \"is\". The action prints \"is is a word\". Position advances by 2.",
+            "result": "The second word is reported; position moves from 5 to 7.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 5,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 7,
+              "yytext": "is",
+              "rule": "[a-zA-Z]+"
+            },
+            "output": "is is a word"
+          },
+          {
+            "line": 11,
+            "what": "The space after \"is\" is echoed by .|\\n.",
+            "why": "The space between words is copied to keep the output readable.",
+            "how": "ECHO writes the space; position advances to 8.",
+            "result": "Space echoed; position = 8.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 7,
+              "yytext": "is",
+              "rule": "[a-zA-Z]+"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 8,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "output": "[space]"
+          },
+          {
+            "line": 10,
+            "what": "The word rule matches \"first\".",
+            "why": "The longest letter sequence starting at position 8 is \"first\" (5 letters).",
+            "how": "The action prints \"first is a word\". Position advances by 5.",
+            "result": "Third word reported; position = 13.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 8,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 13,
+              "yytext": "first",
+              "rule": "[a-zA-Z]+"
+            },
+            "output": "first is a word"
+          },
+          {
+            "line": 11,
+            "what": "The space after \"first\" is echoed.",
+            "why": "Spaces are copied by the catch-all rule.",
+            "how": "ECHO writes the space; position advances to 14.",
+            "result": "Space echoed; position = 14.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 13,
+              "yytext": "first",
+              "rule": "[a-zA-Z]+"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 14,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "output": "[space]"
+          },
+          {
+            "line": 10,
+            "what": "The word rule matches the last word \"pr\".",
+            "why": "The final letter sequence of the input is reported as a word.",
+            "how": "yytext = \"pr\". The action prints \"pr is a word\". Position advances to 16.",
+            "result": "Fourth word reported; position = 16.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 14,
+              "yytext": " ",
+              "rule": ".|\\n (ECHO)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 16,
+              "yytext": "pr",
+              "rule": "[a-zA-Z]+"
+            },
+            "output": "pr is a word"
+          },
+          {
+            "line": 11,
+            "what": "The newline at the end of the input is echoed by the second alternative \\n.",
+            "why": "The newline character must also be copied so the output ends on a new line.",
+            "how": "ECHO writes the newline; position advances to 17 — the end of the input buffer.",
+            "result": "End of input reached; position = 17.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 16,
+              "yytext": "pr",
+              "rule": "[a-zA-Z]+"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 17,
+              "yytext": "\\n",
+              "rule": ".|\\n (ECHO)"
+            },
+            "output": "[newline]"
+          },
+          {
+            "line": 16,
+            "what": "yylex() returns because the entire input has been scanned.",
+            "why": "The scanning loop ends when there is no more input to match.",
+            "how": "Control returns from yylex() to main(). All tokens have been classified and printed.",
+            "result": "Scanning complete — every word in \"this is first pr\" has been classified.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 17,
+              "yytext": "\\n",
+              "rule": ".|\\n (ECHO)"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 17,
+              "yytext": "",
+              "rule": "end of input"
+            },
+            "output": ""
+          },
+          {
+            "line": 20,
+            "what": "yywrap() returns 1, which tells the scanner there is no more input to read.",
+            "why": "yywrap() is called when the scanner reaches the end of input; returning 1 makes yylex() finish cleanly.",
+            "how": "main() ends after yylex() returns. The program terminates with the classified token stream as its output.",
+            "result": "Program terminates. Final output shows all four words classified.",
+            "before": {
+              "input": "this is first pr\\n",
+              "position": 17,
+              "yytext": "",
+              "rule": "end of input"
+            },
+            "after": {
+              "input": "this is first pr\\n",
+              "position": 17,
+              "yytext": "",
+              "rule": "program ended"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "this is a word is is a word first is a word pr is a word"
+      }
+    },
+    {
+      "practicalNumber": 2,
+      "title": "Write a Lexical Analyzer (using Lex utility for UNIX)",
+      "shortDescription": "LEX program that recognises keywords, identifiers, numbers, strings, operators and special symbols.",
+      "language": "LEX (flex)",
+      "aim": "Write a Lexical Analyzer (using Lex utility for UNIX).",
+      "objective": "(a) To acquire skill of writing program for Lex utility.\n(b) To able to write lexical analyzer for different language.",
+      "theory": "Lex, originally written by Mike Lesk and Eric Schmidt and described in 1975, is the standard lexical analyzer generator on many Unix systems. Lex reads an input stream specifying the lexical analyzer and writes source code which implements the lexical analyzer in the C programming language.\n\nLex accepts an input specification which consists of three components:\n1. Definitions\n2. Rules\n3. User Code\nThese components are separated by %% symbol.\n\n• Definition: It contains declaration of simple name definition to simplify scanner specification or in simple words it contains the variables to hold regular expressions. For example, if you want to define D as a numerical digit, you would write: D [0-9]\n• Rules Section: Once you have defined your terms, you can write the rules section. It contains strings and expressions to be matched by the yylex subroutine, and C commands to execute when a match is made. This section is required, and it must be preceded by the delimiter %% (double percent signs), whether or not you have a definitions section.\n  - x : match the character 'x'\n  - . : any character except newline\n  - [xyz] : a \"character class\"; matches either an 'x', a 'y', or a 'z'\n  - r*: zero or more r's, where r is any regular expression\n  - r+: one or more r's\n• User Code Section: This section can contain any C/C++ program code that user want to execute. Yylex() function is used to flex compiler, which is embedded in this section so user need to include this function.\n\nThis observation program is a complete token classifier: keywords are quoted strings \"int\"|\"float\"|..., identifiers use [a-zA-Z_][a-zA-Z0-9_]*, numbers and floating-point numbers use [0-9]+ and [0-9]+\\.[0-9]+, string literals use \\\"[^\\\"]*\\\", operators and special symbols are quoted single characters, whitespace is ignored, and any other character is reported as Unknown.\n\n--- Quiz (from the lab manual) ---\nQ1. Find other utilities to write Lexical analyzer.\nOther utilities: Lex (most commonly used), Flex (Fast Lexical Analyzer Generator), JLex, ANTLR, JavaCC.\n\nQ2. What will be output of lexical analyzer?\nIt produces a sequence of tokens from the source code, such as keywords, identifiers, operators, constants, and symbols.",
+      "algorithm": "1. Start with %{ ... %} containing #include <iostream> and using namespace std.\n2. Begin the rules section with %%.\n3. Rule 1: \"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\" → print Keyword.\n4. Rule 2: [a-zA-Z_][a-zA-Z0-9_]* → print Identifier (first char letter/underscore, then letters/digits/underscores).\n5. Rule 3: [0-9]+\\.[0-9]+ → print Floating Point Number (digits, dot, digits).\n6. Rule 4: [0-9]+ → print Integer Number.\n7. Rule 5: \\\"[^\\\"]*\\\" → print String Literal (quote, any non-quote chars, quote).\n8. Rule 6: \"+\"|\"-\"|\"*\"|\"/\"|\"=\" → print Operator.\n9. Rule 7: \"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\" → print Special Symbol.\n10. Rule 8: [ \\t\\n]+ → ignore spaces and new lines.\n11. Rule 9: . → print Unknown Character.\n12. End with %% and write main(): print \"Enter the input:\", call yylex(), return 0.",
+      "procedure": "1. Create a file (e.g. 31.l) and enter the source code shown below exactly as given.\n2. Generate the scanner: flex 31.l\n3. Compile: gcc lex.yy.c\n4. Run: a.exe\n5. Enter the input (from the manual):\n   int a = 10;\n   float b = 25.5;\n   if(a>b)\n   {\n   cout = \"Hello\";\n   }\n6. Observe each token printed with its class (Keyword, Identifier, Operator, …).",
+      "sourceCode": "%{\n#include <iostream>\nusing namespace std;\n%}\n\n%%\n\n\"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\" {\n  cout << \"Keyword: \" << yytext << endl;\n}\n\n[a-zA-Z_][a-zA-Z0-9_]* {\n  cout << \"Identifier: \" << yytext << endl;\n}\n\n[0-9]+\\.[0-9]+ {\n  cout << \"Floating Point Number: \" << yytext << endl;\n}\n\n[0-9]+ {\n  cout << \"Integer Number: \" << yytext << endl;\n}\n\n\\\"[^\\\"]*\\\" {\n  cout << \"String Literal: \" << yytext << endl;\n}\n\n\"+\"|\"-\"|\"*\"|\"/\"|\"=\" {\n  cout << \"Operator: \" << yytext << endl;\n}\n\n\"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\" {\n  cout << \"Special Symbol: \" << yytext << endl;\n}\n\n[ \\t\\n]+ {\n   // Ignore spaces and new lines\n}\n\n.{\n     cout << \"Unknown Character: \" << yytext << endl;\n}\n\n%%\n\nint main()\n{\n  cout << \"Enter the input:\\n\";\n  yylex();\n  return 0;\n}",
+      "expectedOutput": "Enter the input:\nint a = 10;\nfloat b = 25.5;\nif(a>b)\n{\ncout = \"Hello\";\n}\n\nKeyword: int\nIdentifier: a\nOperator: =\nInteger Number: 10\nSpecial Symbol: ;\n\nKeyword: float\nIdentifier: b\nOperator: =\nFloating Point Number: 25.5\nSpecial Symbol: ;\n\nKeyword: if\nSpecial Symbol: (\nIdentifier: a\nOperator: >\nIdentifier: b\nSpecial Symbol: )\n\nSpecial Symbol: {\nIdentifier: cout\nOperator: =\nString Literal: \"Hello\"\nSpecial Symbol: ;\nSpecial Symbol: }",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input buffer",
+            "kind": "text"
+          },
+          {
+            "key": "position",
+            "label": "Position",
+            "kind": "num"
+          },
+          {
+            "key": "yytext",
+            "label": "Matched text (yytext)",
+            "kind": "text"
+          },
+          {
+            "key": "matchedRule",
+            "label": "Matched rule",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "int a = 10;\\nfloat b = 25.5;",
+          "position": 0,
+          "yytext": "",
+          "matchedRule": "—"
+        },
+        "steps": [
+          {
+            "line": 6,
+            "what": "The rules section begins with %%. The scanner is ready to classify the input.",
+            "why": "The rules after %% define how every character of the input is turned into a token.",
+            "how": "yylex() starts reading from position 0 of \"int a = 10;\\nfloat b = 25.5;\".",
+            "result": "Scanner ready; no tokens classified yet.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 0,
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 0,
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "The keyword rule matches \"int\" — the quoted words \"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\".",
+            "why": "Keywords are reserved words. Quoting each keyword makes LEX match the exact word.",
+            "how": "yytext = \"int\". The action prints Keyword: int. Position advances by 3.",
+            "result": "Token \"int\" classified as KEYWORD; position = 3.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 0,
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 3,
+              "yytext": "int",
+              "matchedRule": "\"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\""
+            },
+            "output": "Keyword: int"
+          },
+          {
+            "line": 12,
+            "what": "The identifier rule [a-zA-Z_][a-zA-Z0-9_]* matches \"a\".",
+            "why": "An identifier must start with a letter or underscore, followed by letters, digits or underscores.",
+            "how": "The whitespace before \"a\" is skipped by rule 8; then \"a\" matches the identifier pattern. yytext = \"a\". Position advances.",
+            "result": "Token \"a\" classified as IDENTIFIER; position = 5.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 3,
+              "yytext": "int",
+              "matchedRule": "\"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 5,
+              "yytext": "a",
+              "matchedRule": "[a-zA-Z_][a-zA-Z0-9_]*"
+            },
+            "output": "Identifier: a"
+          },
+          {
+            "line": 28,
+            "what": "The operator rule matches \"=\".",
+            "why": "Symbols like = are operators; they must be recognised as their own token type.",
+            "how": "Whitespace is skipped, then \"=\" matches one of the quoted operators. yytext = \"=\". Position advances.",
+            "result": "Token \"=\" classified as OPERATOR; position = 8.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 5,
+              "yytext": "a",
+              "matchedRule": "[a-zA-Z_][a-zA-Z0-9_]*"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 8,
+              "yytext": "=",
+              "matchedRule": "\"+\"|\"-\"|\"*\"|\"/\"|\"=\""
+            },
+            "output": "Operator: ="
+          },
+          {
+            "line": 20,
+            "what": "The integer rule [0-9]+ matches \"10\".",
+            "why": "A sequence of digits without a decimal point is an integer number.",
+            "how": "yytext = \"10\". The action prints Integer Number: 10. Position advances by 2.",
+            "result": "Token \"10\" classified as INTEGER; position = 11.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 8,
+              "yytext": "=",
+              "matchedRule": "\"+\"|\"-\"|\"*\"|\"/\"|\"=\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 11,
+              "yytext": "10",
+              "matchedRule": "[0-9]+"
+            },
+            "output": "Integer Number: 10"
+          },
+          {
+            "line": 32,
+            "what": "The special symbol rule matches \";\" — the quoted symbols \"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\" .",
+            "why": "Punctuation like ; and , are special symbols in this scanner.",
+            "how": "yytext = \";\". The action prints Special Symbol: ;. Position advances.",
+            "result": "Token \";\" classified as SPECIAL SYMBOL; position = 12.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 11,
+              "yytext": "10",
+              "matchedRule": "[0-9]+"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 12,
+              "yytext": ";",
+              "matchedRule": "\"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\""
+            },
+            "output": "Special Symbol: ;"
+          },
+          {
+            "line": 36,
+            "what": "The whitespace rule [ \\t\\n]+ matches the newline after \";\".",
+            "why": "Spaces and newlines carry no token meaning, so the empty action ignores them.",
+            "how": "The whole run of whitespace characters is consumed silently. Position advances to 13.",
+            "result": "Newline skipped; position = 13.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 12,
+              "yytext": ";",
+              "matchedRule": "\"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 13,
+              "yytext": "\\n",
+              "matchedRule": "[ \\t\\n]+ (ignored)"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "The keyword rule matches \"float\" on the second line.",
+            "why": "\"float\" is one of the quoted reserved words in the keyword rule.",
+            "how": "yytext = \"float\". The action prints Keyword: float. Position advances by 5.",
+            "result": "Token \"float\" classified as KEYWORD; position = 18.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 13,
+              "yytext": "\\n",
+              "matchedRule": "[ \\t\\n]+ (ignored)"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 18,
+              "yytext": "float",
+              "matchedRule": "\"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\""
+            },
+            "output": "Keyword: float"
+          },
+          {
+            "line": 12,
+            "what": "The identifier rule matches \"b\".",
+            "why": "\"b\" starts with a letter and is not a keyword, so it is an identifier.",
+            "how": "Whitespace skipped, then yytext = \"b\". Position advances.",
+            "result": "Token \"b\" classified as IDENTIFIER; position = 20.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 18,
+              "yytext": "float",
+              "matchedRule": "\"int\"|\"float\"|\"char\"|\"if\"|\"else\"|\"while\"|\"for\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 20,
+              "yytext": "b",
+              "matchedRule": "[a-zA-Z_][a-zA-Z0-9_]*"
+            },
+            "output": "Identifier: b"
+          },
+          {
+            "line": 28,
+            "what": "The operator rule matches \"=\" after \"b\".",
+            "why": "The assignment operator is recognised again.",
+            "how": "yytext = \"=\". Position advances.",
+            "result": "Token \"=\" classified as OPERATOR; position = 23.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 20,
+              "yytext": "b",
+              "matchedRule": "[a-zA-Z_][a-zA-Z0-9_]*"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 23,
+              "yytext": "=",
+              "matchedRule": "\"+\"|\"-\"|\"*\"|\"/\"|\"=\""
+            },
+            "output": "Operator: ="
+          },
+          {
+            "line": 16,
+            "what": "The floating point rule [0-9]+\\.[0-9]+ matches \"25.5\".",
+            "why": "A number containing a decimal point must be matched by this rule — it is listed BEFORE [0-9]+ so that \"25.5\" is not cut into \"25\" and \".5\".",
+            "how": "yytext = \"25.5\". The action prints Floating Point Number: 25.5. Position advances by 4.",
+            "result": "Token \"25.5\" classified as FLOATING POINT NUMBER; position = 27.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 23,
+              "yytext": "=",
+              "matchedRule": "\"+\"|\"-\"|\"*\"|\"/\"|\"=\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 27,
+              "yytext": "25.5",
+              "matchedRule": "[0-9]+\\.[0-9]+"
+            },
+            "output": "Floating Point Number: 25.5"
+          },
+          {
+            "line": 32,
+            "what": "The special symbol rule matches the final \";\".",
+            "why": "The statement terminator is a special symbol.",
+            "how": "yytext = \";\". Position advances to 28 — end of input.",
+            "result": "Token \";\" classified as SPECIAL SYMBOL; position = 28.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 27,
+              "yytext": "25.5",
+              "matchedRule": "[0-9]+\\.[0-9]+"
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 28,
+              "yytext": ";",
+              "matchedRule": "\"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\""
+            },
+            "output": "Special Symbol: ;"
+          },
+          {
+            "line": 49,
+            "what": "yylex() returns at the end of input; main() returns 0.",
+            "why": "The scanner has classified every character of the simulated input.",
+            "how": "Control returns to main() and the program ends. The token stream printed so far is the result.",
+            "result": "Scanning complete: keywords, identifiers, operators, integers, floats and symbols classified.",
+            "before": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 28,
+              "yytext": ";",
+              "matchedRule": "\"(\"|\")\"|\"{\"|\"}\"|\";\"|\",\""
+            },
+            "after": {
+              "input": "int a = 10;\\nfloat b = 25.5;",
+              "position": 28,
+              "yytext": "",
+              "matchedRule": "end of input"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "Keyword: int\nIdentifier: a\nOperator: =\nInteger Number: 10\nSpecial Symbol: ;\nKeyword: float\nIdentifier: b\nOperator: =\nFloating Point Number: 25.5\nSpecial Symbol: ;"
+      }
+    },
+    {
+      "practicalNumber": 3,
+      "title": "Write a C program to left factor the given grammar",
+      "shortDescription": "LEX program that detects whether a grammar production needs left factoring.",
+      "language": "LEX (flex)",
+      "aim": "Write a C program to left factor the given grammar.",
+      "objective": "(a) to understand left factoring",
+      "theory": "Left factoring is a process by which the grammar with common prefixes is transformed to make it useful for Top Down parsers.\n\nIn left factoring:\n• Make one production for each common prefixes.\n• The common prefix may be a terminal or a non-terminal or a combination of both.\n• Rest of the derivation is added by new productions.\n\nExample: Do left factoring in the following grammar:\nS → iEtS / iEtSeS / a\nE → b\n\nThe left factored grammar is:\nS → iEtSS' / a\nS' → eS / ∈\nE → b\n\nThis LEX program reads grammar productions of the form A -> xy|zw. It uses strstr(yytext, \"->\") to find the arrow and strchr(yytext, '|') to find the bar. If the first character after the arrow (the start of the first alternative) equals the first character after the bar (the start of the second alternative), the two alternatives share a common prefix and left factoring is required; otherwise it is not.\n\n--- Quiz (from the lab manual) ---\nQ1. Find the different applications of Left factoring.\nApplications: Makes grammar suitable for LL(1) predictive parsing; Reduces backtracking during parsing; Simplifies top-down (recursive-descent) parsing; Improves parser efficiency and speed; Used in compiler design to build syntax analyzers.",
+      "algorithm": "1. Start with %{ ... %} and include stdio.h and string.h.\n2. Begin the rules section with %%.\n3. Pattern [A-Z]->[a-zA-Z]+[|][a-zA-Z]+ matches a production line such as A->ab|ac (single uppercase non-terminal, arrow, two alternatives separated by |).\n4. In the action, use strstr(yytext, \"->\") to locate the arrow and strchr(yytext, '|') to locate the bar.\n5. Compare the character after the arrow (start of alternative 1) with the character after the bar (start of alternative 2).\n6. If they are equal → print \"Left Factoring Required\"; otherwise print \"No Left Factoring Needed\".\n7. Ignore whitespace (rule [\\n\\t ]+ ;) and every other character (rule .;).\n8. Write yywrap() returning 1 and main() calling yylex().",
+      "procedure": "1. Create a file (e.g. 31.l) with the source code below.\n2. flex 31.l\n3. gcc lex.yy.c\n4. a.exe\n5. Enter the productions one per line:\n   A->ab|ac\n   B->xy|yz\n   C->abc|abd\n6. Observe: A and C need left factoring (common prefixes ab… and abc…), B does not.",
+      "sourceCode": "%{\n#include <stdio.h>\n#include <string.h>\n%}\n\n%%\n[A-Z]->[a-zA-Z]+[|][a-zA-Z]+ {\n    char *p = strstr(yytext, \"->\");\n    char *q = strchr(yytext, '|');\n\n    if (*(p + 2) == *(q + 1))\n       printf(\"Left Factoring Required: %s\\n\", yytext);\n    else\n       printf(\"No Left Factoring Needed: %s\\n\", yytext);\n}\n\n[\\n\\t ]+ ;\n.;\n%%\n\nint yywrap()\n{\n  return 1;\n}\n\nint main()\n{\n  yylex();\n  return 0;\n}",
+      "expectedOutput": "A->ab|ac\nLeft Factoring Required: A->ab|ac\nB->xy|yz\nNo Left Factoring Needed: B->xy|yz\nC->abc|abd\nLeft Factoring Required: C->abc|abd",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input (productions)",
+            "kind": "text"
+          },
+          {
+            "key": "yytext",
+            "label": "Matched production",
+            "kind": "text"
+          },
+          {
+            "key": "p2",
+            "label": "Char after \"->\" (start of alt 1)",
+            "kind": "text"
+          },
+          {
+            "key": "q1",
+            "label": "Char after \"|\" (start of alt 2)",
+            "kind": "text"
+          },
+          {
+            "key": "decision",
+            "label": "Decision",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+          "yytext": "",
+          "p2": "",
+          "q1": "",
+          "decision": "—"
+        },
+        "steps": [
+          {
+            "line": 6,
+            "what": "The rules section begins with %%. The scanner is ready to read grammar productions.",
+            "why": "The single rule of this program matches production lines and checks them for common prefixes.",
+            "how": "yylex() reads the input line by line; each production line is matched whole.",
+            "result": "Scanner ready.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "The pattern [A-Z]->[a-zA-Z]+[|][a-zA-Z]+ matches the first production \"A->ab|ac\".",
+            "why": "The pattern is written so that | inside the brackets [|] means the literal bar character, not alternation.",
+            "how": "yytext = \"A->ab|ac\". strstr finds \"->\" at index 1, so p points to \"->ab|ac\" and *(p+2) = 'a'. strchr finds '|' at index 4, so *(q+1) = 'a'.",
+            "result": "Production captured: A->ab|ac. Both alternatives start with the same character.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 11,
+            "what": "The condition *(p + 2) == *(q + 1) is evaluated: 'a' == 'a' is TRUE.",
+            "why": "A common prefix means the two alternatives start with the same symbol — here both start with a.",
+            "how": "Because the condition is true, the if-branch executes.",
+            "result": "Left factoring is required for A->ab|ac.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "output": ""
+          },
+          {
+            "line": 12,
+            "what": "printf prints the verdict together with the production.",
+            "why": "The message tells the student which production needs left factoring.",
+            "how": "The string \"Left Factoring Required: A->ab|ac\" is written to stdout.",
+            "result": "First production reported.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "output": "Left Factoring Required: A->ab|ac"
+          },
+          {
+            "line": 17,
+            "what": "The whitespace rule [\\n\\t ]+ matches the newline after the first production.",
+            "why": "Blank lines and newlines carry no information, so the empty action ; skips them.",
+            "how": "The scanner moves to the next line of input.",
+            "result": "Newline skipped.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "A->ab|ac",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "The pattern matches the second production \"B->xy|yz\".",
+            "why": "The same rule is applied to every production line.",
+            "how": "yytext = \"B->xy|yz\". *(p+2) = 'x' (after \"->\") and *(q+1) = 'y' (after \"|\").",
+            "result": "Production captured: B->xy|yz. The alternatives start with different characters.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 11,
+            "what": "The condition is evaluated: 'x' == 'y' is FALSE.",
+            "why": "Different starting characters mean the alternatives do not share a prefix.",
+            "how": "The else-branch (line 14) executes instead.",
+            "result": "Left factoring is NOT needed for B->xy|yz.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "No Left Factoring Needed"
+            },
+            "output": ""
+          },
+          {
+            "line": 14,
+            "what": "printf prints \"No Left Factoring Needed: B->xy|yz\".",
+            "why": "The verdict for a grammar without a common prefix is reported.",
+            "how": "The else-branch message is written to stdout.",
+            "result": "Second production reported.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "No Left Factoring Needed"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "No Left Factoring Needed"
+            },
+            "output": "No Left Factoring Needed: B->xy|yz"
+          },
+          {
+            "line": 17,
+            "what": "The newline after B->xy|yz is skipped.",
+            "why": "Empty-action rule consumes the newline.",
+            "how": "Scanner moves to the third production.",
+            "result": "Newline skipped.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "B->xy|yz",
+              "p2": "x",
+              "q1": "y",
+              "decision": "No Left Factoring Needed"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "The pattern matches the third production \"C->abc|abd\".",
+            "why": "The rule fires again for the next line.",
+            "how": "yytext = \"C->abc|abd\". *(p+2) = 'a' and *(q+1) = 'a'.",
+            "result": "Production captured: C->abc|abd. Both alternatives start with a.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "C->abc|abd",
+              "p2": "a",
+              "q1": "a",
+              "decision": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 11,
+            "what": "The condition is evaluated: 'a' == 'a' is TRUE.",
+            "why": "C->abc|abd has the common prefix \"ab\", so left factoring is required.",
+            "how": "The if-branch executes and the message is printed.",
+            "result": "Third production reported.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "C->abc|abd",
+              "p2": "a",
+              "q1": "a",
+              "decision": "—"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "C->abc|abd",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "output": "Left Factoring Required: C->abc|abd"
+          },
+          {
+            "line": 23,
+            "what": "yywrap() returns 1 and yylex() returns — the program ends.",
+            "why": "yywrap returning 1 signals that there is no more input to read.",
+            "how": "main() finishes after yylex() returns 0.",
+            "result": "All three productions have been checked.",
+            "before": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "C->abc|abd",
+              "p2": "a",
+              "q1": "a",
+              "decision": "Left Factoring Required"
+            },
+            "after": {
+              "input": "A->ab|ac\\nB->xy|yz\\nC->abc|abd",
+              "yytext": "",
+              "p2": "",
+              "q1": "",
+              "decision": "program ended"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "Left Factoring Required: A->ab|ac\nNo Left Factoring Needed: B->xy|yz\nLeft Factoring Required: C->abc|abd"
+      }
+    },
+    {
+      "practicalNumber": 4,
+      "title": "Write a C program to remove the Left Recursion from a given grammar",
+      "shortDescription": "LEX program that detects left recursion in a grammar and prints the recursion-free grammar.",
+      "language": "LEX (flex)",
+      "aim": "Write a C program to remove the Left Recursion from a given grammar.",
+      "objective": "(a) to understand Left Recursion",
+      "theory": "Left recursion is a concept in formal grammar theory and parsing algorithms used in computer science and natural language processing. It refers to a situation in which a grammar rule directly or indirectly references itself from the left-hand side of the production rule.\n\nIn the context of context-free grammars, a grammar rule is typically defined as:\nA → α1 | α2 | ... | αn\nWhere \"A\" is a non-terminal symbol, and α1, α2, ..., αn are sequences of non-terminal and terminal symbols. Left recursion occurs when one of the αi sequences starts with the same non-terminal symbol \"A\" that is on the left-hand side:\nA → Aα1 | Aα2 | ... | Aαn\n\nLeft recursion can lead to problems in parsing and can make it difficult to construct efficient parsers using certain parsing techniques, such as recursive descent parsing. To eliminate left recursion from a grammar, you can use a technique called left recursion elimination, which involves rewriting the grammar rules to remove the left recursion. The idea is to factor out the left recursion so that the grammar becomes:\nA → β1A' | β2A' | ... | βmA'\nA' → α1 | α2 | ... | αn\nHere, A' is a new non-terminal symbol, and β1, β2, ..., βm are sequences of symbols that do not start with A. This restructuring of the grammar allows for more straightforward parsing.\n\nLeft recursion elimination is a fundamental step in the process of converting a context-free grammar into other forms suitable for parsing, such as LL(1) or LR(1) grammars.\n\nThe program reads a production A -> X|Y, splits the right-hand side at | with strtok, and checks whether the first character of either alternative equals the left-hand side non-terminal (lhs). If the FIRST alternative is left-recursive (A->Aa|b), the output is:\nA->bA'\nA'->aA'|e\n\n--- Quiz (from the lab manual) ---\nQ1. Find the different applications of left recursion.\nApplications: Used in expression parsing (e.g., arithmetic expressions); Helps represent repetitive structures in grammar; Used in context-free grammar design; Supports bottom-up parsing techniques like LR parsers; Helps define constructs such as lists and sequences in programming languages.",
+      "algorithm": "1. Start with %{ ... %} including stdio.h and string.h.\n2. Begin the rules section with %%.\n3. Pattern [A-Z]->[A-Za-z]+\\|[A-Za-z]+ matches a production with two alternatives, e.g. A->Aa|b.\n4. lhs = yytext[0] (the non-terminal).\n5. Copy the right-hand side (after ->) into rhs and split it with strtok(rhs, \"|\") into first and second.\n6. If first[0] == lhs → left recursion in the FIRST alternative: print lhs->second lhs' and lhs'->(first+1) lhs'|e.\n7. Else if second[0] == lhs → left recursion in the SECOND alternative: print lhs->first lhs' and lhs'->(second+1) lhs'|e.\n8. Otherwise print \"No Left Recursion.\".\n9. Ignore whitespace and any other characters; write yywrap() and main().",
+      "procedure": "1. Create a file (e.g. 4.l) with the source code below.\n2. flex 4.l\n3. gcc lex.yy.c -o leftrec.exe\n4. Run and enter a grammar, e.g.:\n   A->Aa|c  → A->cA'  and  A'->aA'|e\n   E->E+T|T → E->TE'  and  E'->+TE'|e\n   T->T*F|F → T->FT'  and  T'->*FT'|e\n   L->L,i|i → L->iL'  and  L'->,iL'|e\n   A->aA|b  → No Left Recursion.",
+      "sourceCode": "%{\n#include <stdio.h>\n#include <string.h>\n%}\n\n%%\n\n[A-Z]->[A-Za-z]+\\|[A-Za-z]+ {\n  char lhs = yytext[0];\n\n    char *arrow = strstr(yytext, \"->\");\n    char rhs[100];\n    strcpy(rhs, arrow + 2);\n\n    char *first = strtok(rhs, \"|\");\n    char *second = strtok(NULL, \"|\");\n\n    if (first[0] == lhs)\n    {\n       printf(\"\\nLeft Recursion Found\\n\");\n       printf(\"Grammar after removing Left Recursion:\\n\");\n       printf(\"%c->%s%c'\\n\", lhs, second, lhs);\n       printf(\"%c'->%s%c'|e\\n\", lhs, first + 1, lhs);\n    }\n    else if (second[0] == lhs)\n    {\n       printf(\"\\nLeft Recursion Found\\n\");\n       printf(\"Grammar after removing Left Recursion:\\n\");\n       printf(\"%c->%s%c'\\n\", lhs, first, lhs);\n       printf(\"%c'->%s%c'|e\\n\", lhs, second + 1, lhs);\n    }\n    else\n    {\n       printf(\"\\nNo Left Recursion.\\n\");\n    }\n}\n\n[\\n\\t ]+ ;\n.      ;\n\n%%\n\nint yywrap()\n{\n  return 1;\n}\n\nint main()\n{\n  printf(\"Enter Grammar (Example: A->Aa|b):\\n\");\n  yylex();\n  return 0;\n}",
+      "expectedOutput": "Enter Grammar (Example: A->Aa|b):\nA->Aa|c\n\nLeft Recursion Found\nGrammar after removing Left Recursion:\nA->cA'\nA'->aA'|e\n\n(also, for E->E+T|T):\nLeft Recursion Found\nGrammar after removing Left Recursion:\nE->TE'\nE'->+TE'|e",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input grammar",
+            "kind": "text"
+          },
+          {
+            "key": "lhs",
+            "label": "lhs (non-terminal)",
+            "kind": "text"
+          },
+          {
+            "key": "first",
+            "label": "First alternative",
+            "kind": "text"
+          },
+          {
+            "key": "second",
+            "label": "Second alternative",
+            "kind": "text"
+          },
+          {
+            "key": "verdict",
+            "label": "Verdict",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "A->Aa|c",
+          "lhs": "",
+          "first": "",
+          "second": "",
+          "verdict": "—"
+        },
+        "steps": [
+          {
+            "line": 6,
+            "what": "The rules section begins with %%.",
+            "why": "The rules define how a grammar production is detected and processed.",
+            "how": "yylex() waits for input; the user types A->Aa|c.",
+            "result": "Scanner ready.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "",
+              "first": "",
+              "second": "",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "",
+              "first": "",
+              "second": "",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "The pattern [A-Z]->[A-Za-z]+\\|[A-Za-z]+ matches \"A->Aa|c\".",
+            "why": "The escaped bar \\| means the literal | character inside the production, not regex alternation.",
+            "how": "yytext = \"A->Aa|c\". The action begins: lhs = yytext[0] = 'A'.",
+            "result": "Production captured; lhs = A.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "",
+              "first": "",
+              "second": "",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "",
+              "second": "",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 11,
+            "what": "strstr finds the arrow and the right-hand side is copied into rhs.",
+            "why": "We need the two alternatives separately, so the part after \"->\" (\"Aa|c\") is copied to rhs.",
+            "how": "arrow points at \"->Aa|c\"; rhs = \"Aa|c\".",
+            "result": "Right-hand side extracted: \"Aa|c\".",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "",
+              "second": "",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 15,
+            "what": "strtok(rhs, \"|\") returns the first alternative \"Aa\"; strtok(NULL, \"|\") returns \"c\".",
+            "why": "strtok splits the right-hand side at the | separator, giving the two alternatives.",
+            "how": "first = \"Aa\", second = \"c\".",
+            "result": "Alternatives split: first = Aa, second = c.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 18,
+            "what": "The condition first[0] == lhs is checked: 'A' == 'A' is TRUE.",
+            "why": "The first alternative starts with the same non-terminal A — this is immediate left recursion.",
+            "how": "The if-branch executes: the grammar needs left recursion removal.",
+            "result": "Left recursion detected in the first alternative.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "output": ""
+          },
+          {
+            "line": 20,
+            "what": "printf prints \"Left Recursion Found\".",
+            "why": "The user is told that the grammar contains left recursion.",
+            "how": "The message is written to stdout.",
+            "result": "Verdict printed.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "output": "Left Recursion Found"
+          },
+          {
+            "line": 22,
+            "what": "printf builds the first new production: %c->%s%c' with (lhs, second, lhs) → \"A->cA'\".",
+            "why": "The non-recursive alternative (c) becomes the first production with the new non-terminal A'.",
+            "how": "The output \"A->cA'\" is written.",
+            "result": "First new production generated: A->cA'.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "output": "A->cA'"
+          },
+          {
+            "line": 23,
+            "what": "printf builds the second new production: %c'->%s%c'|e with (lhs, first+1, lhs) → \"A'->aA'|e\".",
+            "why": "The recursive part (a from \"Aa\") is moved into the new non-terminal A' with ε (e) as the base case.",
+            "how": "first+1 skips the leading A of \"Aa\", leaving \"a\". Output \"A'->aA'|e\" is written.",
+            "result": "Second new production generated: A'->aA'|e.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "output": "A'->aA'|e"
+          },
+          {
+            "line": 38,
+            "what": "The newline after the production is skipped by [\\n\\t ]+ ;.",
+            "why": "Whitespace is ignored.",
+            "how": "Scanner reaches the end of the single-line input.",
+            "result": "Processing complete for this grammar.",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "output": ""
+          },
+          {
+            "line": 51,
+            "what": "yylex() returns and the program ends.",
+            "why": "All input has been processed; yywrap returns 1.",
+            "how": "The program terminates with the recursion-free grammar printed.",
+            "result": "Done — the same rule works for E->E+T|T → E->TE', E'->+TE'|e (see expected output).",
+            "before": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "Left Recursion Found"
+            },
+            "after": {
+              "input": "A->Aa|c",
+              "lhs": "A",
+              "first": "Aa",
+              "second": "c",
+              "verdict": "program ended"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "Left Recursion Found\nGrammar after removing Left Recursion:\nA->cA'\nA'->aA'|e"
+      }
+    },
+    {
+      "practicalNumber": 5,
+      "title": "Write C program to Implement Recursive Descent Parsing for the given Grammar",
+      "shortDescription": "Recursive descent parser (via LEX) for E -> T+E | T, T -> F*T | F, F -> (E) | i.",
+      "language": "LEX (flex) + C",
+      "aim": "Write C program to Implement Recursive Descent Parsing for the given Grammar.\nE -> T + E / T\nT -> F * T / F\nF -> ( E ) / i",
+      "objective": "(a) to understand and implement Recursive Descent Parser",
+      "theory": "It is a kind of Top-Down Parser. A top-down parser builds the parse tree from the top to down, starting with the start non-terminal. A Predictive Parser is a special case of Recursive Descent Parser, where no Back Tracking is required. By carefully writing a grammar meaning eliminating left recursion and left factoring from it, the resulting grammar will be a grammar that can be parsed by a recursive descent parser.\n\nIt can be defined as a Parser that uses the various recursive procedures to process the input string with no backtracking. The first symbol of the string of R.H.S of production will uniquely determine the correct alternative to choose.\n\nThe major approach of recursive-descent parsing is to relate each non-terminal with a procedure. The objective of each procedure is to read a sequence of input characters that can be produced by the corresponding non-terminal, and return a pointer to the root of the parse tree for the non-terminal. The structure of the procedure is prescribed by the productions for the equivalent non-terminal.\n\nThere is a procedure for each non-terminal in the grammar. It can consider a global variable lookahead, holding the current input token and a procedure match (Expected Token) is the action of recognizing the next token in the parsing process and advancing the input stream pointer, such that lookahead points to the next token to be parsed. Match() is effectively a call to the lexical analyzer to get the next token.\n\nFor example, input stream is a + b$. lookahead == a; match(); lookahead == +; match(); lookahead == b; … In this manner, parsing can be done.\n\nIn the program, the functions E(), T() and F() implement the grammar:\nE → T + E | T\nT → F * T | F\nF → ( E ) | i\nEach function consumes input from the global string str using the position pointer pos, and calls error() if a symbol does not match.\n\n--- Quiz (from the lab manual) ---\nQ1. Find the drawbacks of Recursive Descent Parser.\nDrawbacks: Cannot handle left recursive grammars directly; Requires backtracking for some grammars, which reduces efficiency; May cause infinite recursion due to left recursion; Not suitable for large and complex grammars; Requires grammar modification to make it suitable for parsing.",
+      "algorithm": "1. Declare global str[100] and pos, and prototype E(), T(), F() in the definitions section.\n2. In E(): call T(); if str[pos]=='+' then pos++ and call E() recursively (E → T + E).\n3. In T(): call F(); if str[pos]=='*' then pos++ and call T() recursively (T → F * T).\n4. In F(): if str[pos]=='i' then pos++; else if str[pos]=='(' then pos++, call E(), expect ')'; otherwise call error().\n5. error() prints \"String is not accepted\" and exits.\n6. The LEX rule [a-zA-Z+*()]+ copies the typed string into str, sets pos=0 and calls E().\n7. After E() returns, if str[pos]=='\\0' print \"String is accepted\", else \"String is not accepted\".\n8. Test with i+i*i (accepted) and i+*i (not accepted).",
+      "procedure": "1. Create a file (e.g. 5.l) with the source code below.\n2. flex 5.l\n3. gcc lex.yy.c -o gr.exe\n4. Run gr.exe and enter: i+i*i → \"String is accepted\".\n5. Run again and enter: i+*i → \"String is not accepted\".",
+      "sourceCode": "%{\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\nchar str[100];\nint pos = 0;\n\nvoid E();\nvoid T();\nvoid F();\n\nvoid error()\n{\n  printf(\"String is not accepted\\n\");\n  exit(0);\n}\n\nvoid E()\n{\n  T();\n\n    if(str[pos] == '+')\n    {\n       pos++;\n       E();\n    }\n}\n\nvoid T()\n{\n  F();\n\n    if(str[pos] == '*')\n    {\n        pos++;\n        T();\n    }\n}\n\nvoid F()\n{\n  if(str[pos] == 'i')\n  {\n     pos++;\n  }\n  else if(str[pos] == '(')\n  {\n     pos++;\n     E();\n\n         if(str[pos] == ')')\n            pos++;\n         else\n            error();\n     }\n     else\n     {\n       error();\n     }\n}\n%}\n\n%%\n\n[a-zA-Z+*()]+ {\n        strcpy(str, yytext);\n        pos = 0;\n\n                E();\n\n                if(str[pos] == '\\0')\n                   printf(\"String is accepted\\n\");\n                else\n                   printf(\"String is not accepted\\n\");\n            }\n\n[ \\t\\n]+ ;\n\n.;\n\n%%\n\nint yywrap()\n{\n       return 1;\n   }\n\n   int main()\n   {\n     printf(\"Enter the string: \");\n     yylex();\n     return 0;\n   }",
+      "expectedOutput": "Enter the string: i+i*i\nString is accepted\n\nEnter the string: i+*i\nString is not accepted",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "str",
+            "label": "Input string",
+            "kind": "text"
+          },
+          {
+            "key": "pos",
+            "label": "pos (pointer)",
+            "kind": "num"
+          },
+          {
+            "key": "currentChar",
+            "label": "Current char",
+            "kind": "text"
+          },
+          {
+            "key": "callStack",
+            "label": "Function calls",
+            "kind": "text"
+          },
+          {
+            "key": "verdict",
+            "label": "Verdict",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "str": "i+i*i",
+          "pos": 0,
+          "currentChar": "i",
+          "callStack": "",
+          "verdict": "—"
+        },
+        "steps": [
+          {
+            "line": 6,
+            "what": "The definitions section declares the input string, the position pointer and the three parser functions.",
+            "why": "The parser needs shared state (str, pos) and forward declarations so the functions can call each other recursively.",
+            "how": "E(), T() and F() are declared; str and pos are global variables initialised to empty / 0.",
+            "result": "Parser infrastructure ready.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 66,
+            "what": "The LEX rule [a-zA-Z+*()]+ matches the typed input \"i+i*i\".",
+            "why": "The rule captures the whole expression as one token so the parser functions can process it.",
+            "how": "yytext = \"i+i*i\". strcpy copies it into str and pos is reset to 0.",
+            "result": "Expression stored in str; pos = 0.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 70,
+            "what": "E() is called from the rule action — parsing starts from the start symbol E.",
+            "why": "E() must consume a string produced by E → T + E | T.",
+            "how": "E() first calls T() to parse a term (line 21).",
+            "result": "Call stack: E",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 21,
+            "what": "Inside E(): T() is called to parse the first term.",
+            "why": "Every expression begins with a term (E → T …).",
+            "how": "T() calls F() to parse the first factor (line 32).",
+            "result": "Call stack: E → T",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E → T",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 32,
+            "what": "Inside T(): F() is called to parse the first factor.",
+            "why": "Every term begins with a factor (T → F …).",
+            "how": "F() checks the current character at pos 0.",
+            "result": "Call stack: E → T → F",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E → T",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E → T → F",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 43,
+            "what": "F() finds str[pos] == 'i' — the first factor is the identifier i.",
+            "why": "The production F → i applies when the current character is i.",
+            "how": "pos is incremented to 1 and F() returns. The factor i has been consumed.",
+            "result": "Factor i consumed; pos = 1.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 0,
+              "currentChar": "i",
+              "callStack": "E → T → F",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 1,
+              "currentChar": "+",
+              "callStack": "E → T",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 34,
+            "what": "Back in T(): check str[pos] == '*'. The current char is '+', so the *-recursion is skipped.",
+            "why": "T → F * T only applies when a * follows the factor; here the next symbol is +.",
+            "how": "T() returns to E() without consuming anything more.",
+            "result": "Term \"i\" parsed completely; pos = 1.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 1,
+              "currentChar": "+",
+              "callStack": "E → T",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 1,
+              "currentChar": "+",
+              "callStack": "E",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 23,
+            "what": "In E(): str[pos] == '+' is TRUE, so the production E → T + E applies.",
+            "why": "The + connects the first term to the rest of the expression.",
+            "how": "pos++ moves past the + (pos = 2) and E() calls itself recursively (line 26).",
+            "result": "Plus consumed; recursive call E → E; pos = 2.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 1,
+              "currentChar": "+",
+              "callStack": "E",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 2,
+              "currentChar": "i",
+              "callStack": "E → E",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 21,
+            "what": "In the second E(): T() is called again for the remaining \"i*i\".",
+            "why": "The rest of the expression must still be parsed as a term.",
+            "how": "T() calls F(); F() sees str[pos]=='i' at pos 2 and consumes it.",
+            "result": "Factor i consumed; pos = 3; stack: E → E → T → F.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 2,
+              "currentChar": "i",
+              "callStack": "E → E",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 3,
+              "currentChar": "*",
+              "callStack": "E → E → T",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 34,
+            "what": "In T(): str[pos] == '*' is TRUE — the production T → F * T applies.",
+            "why": "The * is a multiplication operator; a term may continue with * and another term.",
+            "how": "pos++ moves past the * (pos = 4) and T() calls itself recursively (line 37).",
+            "result": "Star consumed; recursive call T → T; pos = 4.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 3,
+              "currentChar": "*",
+              "callStack": "E → E → T",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 4,
+              "currentChar": "i",
+              "callStack": "E → E → T → T",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 32,
+            "what": "In the innermost T(): F() parses the final factor i at pos 4.",
+            "why": "The last factor of the expression is parsed by F → i.",
+            "how": "F() increments pos to 5 and returns.",
+            "result": "Final factor i consumed; pos = 5.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 4,
+              "currentChar": "i",
+              "callStack": "E → E → T → T",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "E → E → T",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 34,
+            "what": "Back in the innermost T(): str[pos] == '*'? The current char is '\\0' (end of string) — recursion stops.",
+            "why": "There is no further * or +, so every function returns up the chain.",
+            "how": "All calls unwind: T → T → E → E → the rule action.",
+            "result": "All functions returned; pos = 5 (end of string).",
+            "before": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "E → E → T",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 72,
+            "what": "Back in the rule action: str[pos] == '\\0' is TRUE — the whole input was consumed by the parser.",
+            "why": "If the parser consumed every character, the string belongs to the grammar.",
+            "how": "The if-branch prints \"String is accepted\".",
+            "result": "Verdict: accepted.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "—"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "accepted"
+            },
+            "output": ""
+          },
+          {
+            "line": 73,
+            "what": "printf prints \"String is accepted\".",
+            "why": "The result of the parse is shown to the user.",
+            "how": "The message is written to stdout.",
+            "result": "Output produced.",
+            "before": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "accepted"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "accepted"
+            },
+            "output": "String is accepted"
+          },
+          {
+            "line": 92,
+            "what": "yylex() returns; main() ends.",
+            "why": "End of input; yywrap returns 1.",
+            "how": "Program terminates.",
+            "result": "Done. (Try i+*i: F() would call error() at the second '+' → \"String is not accepted\".)",
+            "before": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "accepted"
+            },
+            "after": {
+              "str": "i+i*i",
+              "pos": 5,
+              "currentChar": "",
+              "callStack": "(returned)",
+              "verdict": "program ended"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "String is accepted"
+      }
+    },
+    {
+      "practicalNumber": 6,
+      "title": "Implement Predictive Parser for the arithmetic expression grammar using YACC and Lex",
+      "shortDescription": "YACC + LEX parser for E → E+T | T, T → T*F | F, F → (E) | ID that validates arithmetic expressions.",
+      "language": "YACC (bison) + LEX",
+      "aim": "Implement Predictive Parser for the arithmetic expression grammar using YACC and Lex.",
+      "objective": "(a) to understand and implement Predictive Parser",
+      "theory": "Predictive parser is a recursive descent parser, which has the capability to predict which production is to be used to replace the input string. The predictive parser does not suffer from backtracking.\n\nTo accomplish its tasks, the predictive parser uses a look-ahead pointer, which points to the next input symbols. To make the parser back-tracking free, the predictive parser puts some constraints on the grammar and accepts only a class of grammar known as LL(k) grammar.\n\nPredictive parsing uses a stack and a parsing table to parse the input and generate a parse tree. Both the stack and the input contain an end symbol $ to denote that the stack is empty and the input is consumed. The parser refers to the parsing table to take any decision on the input and stack element combination.\n\nThe program consists of TWO files:\n• expr.l (LEX) — lines 1–23 of the listing: recognises numbers [0-9]+ and returns the token ID; returns the single-character tokens +, *, (, ).\n• expr.y (YACC) — lines 25–67 of the listing: the grammar\n  E : E '+' T | T\n  T : T '*' F | F\n  F : '(' E ')' | ID\n  YACC (bison -dy) generates a parser (y.tab.c) that is compiled together with lex.yy.c.\n\nThe simulator treats the two files as one listing; line numbers in the explanations refer to this combined listing.\n\n--- Quiz (from the lab manual) ---\nQ1. What are the key advantages of predictive parsing in comparison to other parsing techniques?\nAdvantages: It is simple and efficient compared to other parsing techniques; It does not require backtracking; It can detect syntax errors early; It is easy to implement using recursive descent parsers.\n\nQ2. What is the role of the First and Follow sets in predictive parsing?\nFIRST Set: Determines the possible starting terminals of a grammar symbol and helps select the correct production rule. FOLLOW Set: Identifies the terminals that can appear after a non-terminal and helps handle empty (ε) productions. Together, FIRST and FOLLOW sets are used to construct the LL(1) predictive parsing table.",
+      "algorithm": "1. expr.l: %{ #include \"y.tab.h\" %} brings in the token definitions generated by YACC.\n2. expr.l rules: [0-9]+ returns ID; [+] returns '+'; [*] returns '*'; [(] returns '('; [)] returns ')'; whitespace and other characters are skipped.\n3. expr.y: declare %token ID and write the grammar rules E → E '+' T | T; T → T '*' F | F; F → '(' E ')' | ID.\n4. In main(), call yyparse(); if it returns 0 print \"Expression is valid\", else \"Expression is invalid\".\n5. yyerror() prints the error message produced by the parser.\n6. Compile: flex expr.l; bison -dy expr.y; gcc lex.yy.c y.tab.c -o parser.exe.\n7. Test with 2+3*4 (valid) and 2+*3 (invalid).",
+      "procedure": "1. Create expr.l and expr.y with the exact sources below.\n2. flex expr.l\n3. bison -dy expr.y\n4. gcc lex.yy.c y.tab.c -o parser.exe\n5. Run parser.exe and enter: 2+3*4 → \"Expression is valid\".\n6. Run again and enter: 2+*3 → \"Expression is invalid\".",
+      "sourceCode": "%{\n#include \"y.tab.h\"\n\n%}\n\n%%\n\n[0-9]+            { return ID; }\n[+]            { return '+'; }\n[*]            { return '*'; }\n[(]            { return '('; }\n[)]            { return ')'; }\n\n[ \\t\\n]          ;\n\n.          ;\n\n%%\n\nint yywrap()\n{\n  return 1;\n}\n\n%{\n#include <stdio.h>\n#include <stdlib.h>\n\nint yylex();\nint yyerror(char *s);\n%}\n\n%token ID\n\n%%\n\nE : E '+' T\n |T\n ;\n\nT : T '*' F\n |F\n ;\n\nF : '(' E ')'\n | ID\n ;\n\n%%\n\nint main()\n{\n   printf(\"Enter arithmetic expression:\\n\");\n\n    if(yyparse()==0)\n       printf(\"Expression is valid\\n\");\n    else\n       printf(\"Expression is invalid\\n\");\n\n    return 0;\n}\n\nint yyerror(char *s)\n{\n   printf(\"Error: %s\\n\", s);\n   return 0;\n}",
+      "expectedOutput": "Enter arithmetic expression:\n2+3*4\nExpression is valid\n\nEnter arithmetic expression:\n2+*3\nExpression is invalid",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input expression",
+            "kind": "text"
+          },
+          {
+            "key": "nextToken",
+            "label": "Next token from lexer",
+            "kind": "text"
+          },
+          {
+            "key": "stack",
+            "label": "Parser stack (top → bottom)",
+            "kind": "text"
+          },
+          {
+            "key": "action",
+            "label": "Parser action",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "2+3*4",
+          "nextToken": "ID(2)",
+          "stack": "[]",
+          "action": "—"
+        },
+        "steps": [
+          {
+            "line": 1,
+            "what": "expr.l begins with %{ ... %}: it includes \"y.tab.h\".",
+            "why": "y.tab.h is generated by YACC (bison -dy) and contains the token constants — here the definition of ID.",
+            "how": "The LEX scanner and the YACC parser are compiled into one program, so the scanner can return tokens that the parser understands.",
+            "result": "Scanner–parser interface ready.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "ID(2)",
+              "stack": "[]",
+              "action": "—"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "ID(2)",
+              "stack": "[]",
+              "action": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "The lexer rule [0-9]+ matches the digit \"2\" and returns the token ID.",
+            "why": "The scanner converts the raw character 2 into the abstract token ID, which the grammar knows about.",
+            "how": "yylex() returns ID. The parser receives ID as the first lookahead token.",
+            "result": "Token stream starts: ID.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "ID(2)",
+              "stack": "[]",
+              "action": "—"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "ID(2)",
+              "stack": "[]",
+              "action": "shift ID"
+            },
+            "output": ""
+          },
+          {
+            "line": 9,
+            "what": "The lexer rule [+] matches the plus sign and returns the literal token '+'.",
+            "why": "Single-character operators are returned as themselves, so the parser can match them directly in productions.",
+            "how": "yylex() returns '+'.",
+            "result": "Token stream: ID, +.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "ID(2)",
+              "stack": "[]",
+              "action": "shift ID"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "'+'",
+              "stack": "[ID]",
+              "action": "ID shifted"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "[0-9]+ matches \"3\" and returns ID.",
+            "why": "The second operand is converted to the same token type ID.",
+            "how": "yylex() returns ID.",
+            "result": "Token stream: ID, +, ID.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "'+'",
+              "stack": "[ID]",
+              "action": "ID shifted"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "ID(3)",
+              "stack": "[ID, +]",
+              "action": "'+' shifted"
+            },
+            "output": ""
+          },
+          {
+            "line": 10,
+            "what": "The lexer rule [*] matches the multiplication sign and returns '*'.",
+            "why": "The * token is returned as itself.",
+            "how": "yylex() returns '*'.",
+            "result": "Token stream: ID, +, ID, *.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "ID(3)",
+              "stack": "[ID, +]",
+              "action": "'+' shifted"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "'*'",
+              "stack": "[ID, +, ID]",
+              "action": "ID shifted"
+            },
+            "output": ""
+          },
+          {
+            "line": 8,
+            "what": "[0-9]+ matches \"4\" and returns ID.",
+            "why": "The last operand is tokenised.",
+            "how": "yylex() returns ID — the complete token stream is ID + ID * ID.",
+            "result": "Token stream complete: ID + ID * ID.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "'*'",
+              "stack": "[ID, +, ID]",
+              "action": "ID shifted"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "ID(4)",
+              "stack": "[ID, +, ID, *]",
+              "action": "'*' shifted"
+            },
+            "output": ""
+          },
+          {
+            "line": 45,
+            "what": "The grammar rule F : '(' E ')' | ID applies — the parser reduces ID to F.",
+            "why": "An identifier alone is a factor (F → ID), the bottom of the grammar hierarchy.",
+            "how": "The parser reduces the stack top ID to F (shift-reduce parsing).",
+            "result": "Stack: F (from 2).",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "ID(4)",
+              "stack": "[ID, +, ID, *]",
+              "action": "'*' shifted"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[F]",
+              "action": "reduce F → ID"
+            },
+            "output": ""
+          },
+          {
+            "line": 41,
+            "what": "The rule T : T '*' F | F applies — the parser reduces F to T.",
+            "why": "A factor alone forms a term (T → F).",
+            "how": "Stack top F is reduced to T.",
+            "result": "Stack: T.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[F]",
+              "action": "reduce F → ID"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T]",
+              "action": "reduce T → F"
+            },
+            "output": ""
+          },
+          {
+            "line": 37,
+            "what": "The rule E : E '+' T | T applies — the parser shifts the '+' onto the stack.",
+            "why": "The + must be shifted so the parser can later combine T + T into E.",
+            "how": "Lookahead is '+', which matches the second symbol of E → E '+' T; the parser shifts it.",
+            "result": "Stack: T, +.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T]",
+              "action": "reduce T → F"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +]",
+              "action": "shift +"
+            },
+            "output": ""
+          },
+          {
+            "line": 45,
+            "what": "ID(3) is shifted and reduced: F → ID.",
+            "why": "The second operand becomes a factor.",
+            "how": "The parser shifts ID then reduces it to F.",
+            "result": "Stack: T, +, F.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +]",
+              "action": "shift +"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, F]",
+              "action": "reduce F → ID"
+            },
+            "output": ""
+          },
+          {
+            "line": 41,
+            "what": "F is reduced to T (T → F).",
+            "why": "The second factor forms a term.",
+            "how": "Stack top F → T.",
+            "result": "Stack: T, +, T.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, F]",
+              "action": "reduce F → ID"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T]",
+              "action": "reduce T → F"
+            },
+            "output": ""
+          },
+          {
+            "line": 43,
+            "what": "The parser shifts '*' — the production T : T '*' F is being built.",
+            "why": "The * has higher precedence and is shifted before the + can be reduced, giving the correct order 2 + (3*4).",
+            "how": "Lookahead '*' is shifted onto the stack.",
+            "result": "Stack: T, +, T, *.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T]",
+              "action": "reduce T → F"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T, *]",
+              "action": "shift *"
+            },
+            "output": ""
+          },
+          {
+            "line": 45,
+            "what": "ID(4) is shifted and reduced to F (F → ID).",
+            "why": "The last operand becomes a factor.",
+            "how": "Stack top: ID → F.",
+            "result": "Stack: T, +, T, *, F.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T, *]",
+              "action": "shift *"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T, *, F]",
+              "action": "reduce F → ID"
+            },
+            "output": ""
+          },
+          {
+            "line": 43,
+            "what": "The parser reduces T '*' F → T, combining 3 * 4 into one term.",
+            "why": "The production T : T '*' F collapses the multiplication.",
+            "how": "Stack top T * F is replaced by T.",
+            "result": "Stack: T, +, T.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T, *, F]",
+              "action": "reduce F → ID"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T]",
+              "action": "reduce T → T * F"
+            },
+            "output": ""
+          },
+          {
+            "line": 37,
+            "what": "The parser reduces E '+' T → E, combining 2 + (3*4) into the start symbol.",
+            "why": "The whole expression now matches E : E '+' T.",
+            "how": "Stack top T + T is replaced by E.",
+            "result": "Stack: E — the start symbol.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[T, +, T]",
+              "action": "reduce T → T * F"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[E]",
+              "action": "reduce E → E + T"
+            },
+            "output": ""
+          },
+          {
+            "line": 55,
+            "what": "yyparse() returns 0 because the whole input was consumed and the stack reduced to the start symbol E.",
+            "why": "A parse succeeds when the input is empty and the stack contains only the start symbol.",
+            "how": "main() checks if(yyparse()==0) → true → prints \"Expression is valid\".",
+            "result": "Parse succeeded.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[E]",
+              "action": "reduce E → E + T"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[E]",
+              "action": "accept"
+            },
+            "output": ""
+          },
+          {
+            "line": 56,
+            "what": "printf prints \"Expression is valid\".",
+            "why": "The result of the parse is reported to the user.",
+            "how": "The message is written to stdout.",
+            "result": "Final output produced.",
+            "before": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[E]",
+              "action": "accept"
+            },
+            "after": {
+              "input": "2+3*4",
+              "nextToken": "$ (end)",
+              "stack": "[E]",
+              "action": "accept"
+            },
+            "output": "Expression is valid"
+          }
+        ],
+        "finalOutput": "Expression is valid"
+      }
+    },
+    {
+      "practicalNumber": 7,
+      "title": "Write a SAL program in text file and generate SYMTAB and LITTAB",
+      "shortDescription": "C program that reads a small SAL program and builds the symbol table and literal table.",
+      "language": "C (SAL processing)",
+      "aim": "Write a SAL program in text file and generate SYMTAB and LITTAB.",
+      "objective": "(a) to understand process of creating SYMTAB and LITTAB.",
+      "theory": "A symbol table, often abbreviated as \"SYMTAB,\" is a data structure used in compilers, assemblers, and interpreters to store information about the symbols (identifiers) used in a program. Symbols in this context can include variable names, function names, labels, and other identifiers defined or referenced within the source code. The symbol table serves as a crucial component in the compilation or interpretation process, helping to manage and resolve references to these symbols.\n\nA literal table, \"LITTAB\" refers to a data structure or component used in compilers, assemblers, and other language processing systems to manage and store literal values found within the source code of a program. Literal values are constant values that appear in the code, such as integers, floating-point numbers, strings, or characters. These values need to be identified, recorded, and often assigned memory locations during the compilation or assembly process.\n\nInput file used by the program (input.txt):\n\n            START 100\n            MOVER AREG, ='1'\n            MOVEM AREG, X\n            X DS 1\n            END\n\nHow it works: the program reads the input line by line with fscanf. START sets the location counter lc to 100. MOVER records the literal ='1' in the literal table (address −1, fixed later at END). MOVEM advances lc. A line whose first word is a symbol (X) with a DS directive stores the symbol with the current lc and advances lc by the declared size. At END, every literal is assigned the current lc, one after another.\n\n--- Quiz (from the lab manual) ---\nQ1. Find out the SYMTAB and LITTAB for different programming language.\nSYMTAB (Symbol Table): Stores information about identifiers like variables, functions, and labels. Assembly: labels, variables; C: variables, functions; C++: variables, classes, functions; Java: classes, methods, variables; Python: variables, functions, classes.\nLITTAB (Literal Table): Stores literal constants. Mainly used in Assembly Language. Example: MOVER AREG, ='5' → Literal ='5', Address 300.\n\nQ2. Find additional information that can be stored in SYMTAB and LITTAB.\nSYMTAB: symbol name, address, data type, size, scope (local/global). LITTAB: literal value, address, data type, length, literal pool number.",
+      "algorithm": "1. Define struct symtab { symbol, address } and struct littab { literal, address }.\n2. Initialise lc = 0, scount = 0, lcount = 0.\n3. Open input.txt; if it cannot be opened print \"File not found.\".\n4. While fscanf reads a word w1:\n   - START → read the number into lc.\n   - MOVER → read w2, w3; if w3 starts with '=' store it in LITTAB with address −1 and increment lcount; then lc++.\n   - MOVEM → read w2, w3; lc++.\n   - END → for every literal, set its address = lc and lc++.\n   - otherwise (a symbol) → read w2, w3; if w2 is DS, store symbol with address = lc, lc += atoi(w3), scount++.\n5. Close the file, print the SYMTAB (Symbol / Address) and the LITTAB (Literal / Address).",
+      "procedure": "1. Create input.txt with the SAL program shown in the Theory section.\n2. Create program.c with the source below.\n3. Compile: gcc program.c -o symtab (any C compiler works).\n4. Run: symtab\n5. Expected output:\n   SYMTAB\n   Symbol  Address\n   X       102\n\n   LITTAB\n   Literal Address\n   ='1'    103",
+      "sourceCode": "#include <stdio.h>\n#include <string.h>\n#include <stdlib.h>\n\nstruct symtab\n{\n   char symbol[20];\n   int address;\n};\n\nstruct littab\n{\n   char literal[20];\n   int address;\n};\n\nint main()\n{\n  FILE *fp;\n  char w1[20], w2[20], w3[20];\n\n  struct symtab s[10];\n  struct littab l[10];\n\n  int lc = 0;\n  int scount = 0;\n  int lcount = 0;\n\n  fp = fopen(\"input.txt\", \"r\");\n\nif (fp == NULL)\n{\n   printf(\"File not found.\\n\");\n   return 0;\n}\n\nwhile (fscanf(fp, \"%s\", w1) != EOF)\n{\n  if (strcmp(w1, \"START\") == 0)\n  {\n     fscanf(fp, \"%d\", &lc);\n  }\n\n  else if (strcmp(w1, \"MOVER\") == 0)\n  {\n    fscanf(fp, \"%s %s\", w2, w3);\n\n      if (w3[0] == '=')\n      {\n         strcpy(l[lcount].literal, w3);\n         l[lcount].address = -1;\n         lcount++;\n      }\n\n      lc++;\n  }\n\n  else if (strcmp(w1, \"MOVEM\") == 0)\n  {\n    fscanf(fp, \"%s %s\", w2, w3);\n    lc++;\n  }\n\n  else if (strcmp(w1, \"END\") == 0)\n  {\n    int i;\n    for (i = 0; i < lcount; i++)\n    {\n      l[i].address = lc;\n      lc++;\n    }\n  }\n\n  else\n  {\n    strcpy(s[scount].symbol, w1);\n\n      fscanf(fp, \"%s %s\", w2, w3);\n\n      if (strcmp(w2, \"DS\") == 0)\n      {\n         s[scount].address = lc;\n         lc += atoi(w3);\n         scount++;\n\n                       }\n                   }\n               }\n\n               fclose(fp);\n\n               printf(\"\\nSYMTAB\\n\");\n               printf(\"Symbol\\tAddress\\n\");\n\n               int i;\n               for (i = 0; i < scount; i++)\n                 printf(\"%s\\t%d\\n\", s[i].symbol, s[i].address);\n\n               printf(\"\\nLITTAB\\n\");\n               printf(\"Literal\\tAddress\\n\");\n\n               for (i = 0; i < lcount; i++)\n                 printf(\"%s\\t%d\\n\", l[i].literal, l[i].address);\n\n               return 0;\n                 }",
+      "expectedOutput": "\nSYMTAB\nSymbol\tAddress\nX\t102\n\nLITTAB\nLiteral\tAddress\n='1'\t103",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "instruction",
+            "label": "Line being processed",
+            "kind": "text"
+          },
+          {
+            "key": "lc",
+            "label": "Location counter (lc)",
+            "kind": "num"
+          },
+          {
+            "key": "w2",
+            "label": "Second word (w2)",
+            "kind": "text"
+          },
+          {
+            "key": "w3",
+            "label": "Third word (w3)",
+            "kind": "text"
+          },
+          {
+            "key": "scount",
+            "label": "Symbols in SYMTAB",
+            "kind": "num"
+          },
+          {
+            "key": "lcount",
+            "label": "Literals in LITTAB",
+            "kind": "num"
+          },
+          {
+            "key": "symtab",
+            "label": "SYMTAB",
+            "kind": "text"
+          },
+          {
+            "key": "littab",
+            "label": "LITTAB",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "instruction": "—",
+          "lc": 0,
+          "w2": "",
+          "w3": "",
+          "scount": 0,
+          "lcount": 0,
+          "symtab": "[]",
+          "littab": "[]"
+        },
+        "steps": [
+          {
+            "line": 29,
+            "what": "main() opens input.txt for reading.",
+            "why": "The SAL program is stored in a text file; the assembler-style program reads it line by line.",
+            "how": "fp = fopen(\"input.txt\", \"r\"). The location counter lc starts at 0.",
+            "result": "File opened; lc = 0.",
+            "before": {
+              "instruction": "—",
+              "lc": 0,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "after": {
+              "instruction": "—",
+              "lc": 0,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 37,
+            "what": "The loop reads the first word of the file: w1 = \"START\".",
+            "why": "The loop reads the SAL program word by word until end of file.",
+            "how": "The branch strcmp(w1, \"START\")==0 is taken (line 39).",
+            "result": "Directive START found.",
+            "before": {
+              "instruction": "—",
+              "lc": 0,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "after": {
+              "instruction": "START 100",
+              "lc": 0,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 41,
+            "what": "fscanf(fp, \"%d\", &lc) reads the number 100 into the location counter.",
+            "why": "START sets the origin of the program — the address where the first instruction will be placed.",
+            "how": "lc changes from 0 to 100.",
+            "result": "lc = 100.",
+            "before": {
+              "instruction": "START 100",
+              "lc": 0,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "after": {
+              "instruction": "START 100",
+              "lc": 100,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 44,
+            "what": "The next word is \"MOVER\" — the MOVER branch is taken.",
+            "why": "MOVER is an instruction with two operands: a register and a source (which may be a literal).",
+            "how": "fscanf(fp, \"%s %s\", w2, w3) reads w2 = \"AREG,\" and w3 = \"='1'\".",
+            "result": "Operands read: w2 = AREG,, w3 = ='1'.",
+            "before": {
+              "instruction": "START 100",
+              "lc": 100,
+              "w2": "",
+              "w3": "",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "after": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 100,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 48,
+            "what": "The condition w3[0] == '=' is TRUE — a literal is detected.",
+            "why": "In SAL, literals are written with a leading = (e.g. ='1'); they must be recorded in the LITTAB.",
+            "how": "strcpy(l[0].literal, \"='1'\"), l[0].address = −1 (unknown yet), lcount becomes 1.",
+            "result": "LITTAB now holds ='1' with address −1.",
+            "before": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 100,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 0,
+              "symtab": "[]",
+              "littab": "[]"
+            },
+            "after": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 100,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 55,
+            "what": "lc++ — the instruction occupies one memory word.",
+            "why": "Every instruction reserves one location in memory.",
+            "how": "lc changes from 100 to 101.",
+            "result": "lc = 101.",
+            "before": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 100,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 101,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 58,
+            "what": "The next word is \"MOVEM\" — the MOVEM branch is taken.",
+            "why": "MOVEM stores a register into a memory variable; it has two operands but creates no literal.",
+            "how": "fscanf reads w2 = \"AREG\", w3 = \"X\".",
+            "result": "Operands read.",
+            "before": {
+              "instruction": "MOVER AREG, ='1'",
+              "lc": 101,
+              "w2": "AREG,",
+              "w3": "='1'",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "MOVEM AREG, X",
+              "lc": 101,
+              "w2": "AREG",
+              "w3": "X",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 61,
+            "what": "lc++ — MOVEM occupies one location.",
+            "why": "Each instruction advances the location counter by one word.",
+            "how": "lc changes from 101 to 102.",
+            "result": "lc = 102.",
+            "before": {
+              "instruction": "MOVEM AREG, X",
+              "lc": 101,
+              "w2": "AREG",
+              "w3": "X",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "MOVEM AREG, X",
+              "lc": 102,
+              "w2": "AREG",
+              "w3": "X",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 74,
+            "what": "The next word \"X\" is not a directive — the else branch treats it as a symbol.",
+            "why": "Any other first word is a symbol definition (label/variable).",
+            "how": "strcpy(s[0].symbol, \"X\"). Then fscanf reads w2 = \"DS\", w3 = \"1\".",
+            "result": "Symbol X captured; w2 = DS, w3 = 1.",
+            "before": {
+              "instruction": "MOVEM AREG, X",
+              "lc": 102,
+              "w2": "AREG",
+              "w3": "X",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "X DS 1",
+              "lc": 102,
+              "w2": "DS",
+              "w3": "1",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 80,
+            "what": "strcmp(w2, \"DS\")==0 — X is defined with the DS (define storage) directive.",
+            "why": "DS reserves storage for the variable; its address is the current location counter.",
+            "how": "s[0].address = lc = 102; lc += atoi(\"1\") = 103; scount becomes 1.",
+            "result": "SYMTAB: X at address 102; lc = 103.",
+            "before": {
+              "instruction": "X DS 1",
+              "lc": 102,
+              "w2": "DS",
+              "w3": "1",
+              "scount": 0,
+              "lcount": 1,
+              "symtab": "[]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "X DS 1",
+              "lc": 103,
+              "w2": "DS",
+              "w3": "1",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 64,
+            "what": "The last directive \"END\" is read — the END branch is taken.",
+            "why": "END marks the end of the program; literals whose address was unknown (−1) can now be placed.",
+            "how": "The loop for (i = 0; i < lcount; i++) assigns each literal the current lc, then increments lc.",
+            "result": "Literal ='1' gets address 103; lc becomes 104.",
+            "before": {
+              "instruction": "X DS 1",
+              "lc": 103,
+              "w2": "DS",
+              "w3": "1",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":-1}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 92,
+            "what": "The file is closed and the SYMTAB header is printed.",
+            "why": "After processing the whole program, the tables are displayed.",
+            "how": "printf(\"\\nSYMTAB\\n\") and printf(\"Symbol\\tAddress\\n\") are executed.",
+            "result": "SYMTAB header printed.",
+            "before": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": "SYMTAB\\nSymbol\\tAddress"
+          },
+          {
+            "line": 97,
+            "what": "The loop prints each symbol: \"X\\t102\".",
+            "why": "The symbol table shows every variable with the address assigned by the assembler.",
+            "how": "printf(\"%s\\t%d\\n\", s[0].symbol, s[0].address) prints X and 102.",
+            "result": "Symbol row printed.",
+            "before": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": "X\\t102"
+          },
+          {
+            "line": 99,
+            "what": "The LITTAB header is printed.",
+            "why": "The literal table is displayed below the symbol table.",
+            "how": "printf(\"\\nLITTAB\\n\") and printf(\"Literal\\tAddress\\n\") are executed.",
+            "result": "LITTAB header printed.",
+            "before": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": "LITTAB\\nLiteral\\tAddress"
+          },
+          {
+            "line": 103,
+            "what": "The loop prints each literal: \"='1'\\t103\".",
+            "why": "The literal table shows every literal constant and where it was placed in memory.",
+            "how": "printf(\"%s\\t%d\\n\", l[0].literal, l[0].address) prints ='1' and 103.",
+            "result": "Literal row printed.",
+            "before": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": "='1'\t103"
+          },
+          {
+            "line": 105,
+            "what": "return 0 — the program terminates.",
+            "why": "Both tables have been generated and printed.",
+            "how": "main() returns 0.",
+            "result": "Done: SYMTAB = {X:102}, LITTAB = {='1':103}.",
+            "before": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "after": {
+              "instruction": "END",
+              "lc": 104,
+              "w2": "",
+              "w3": "",
+              "scount": 1,
+              "lcount": 1,
+              "symtab": "[{\"symbol\":\"X\",\"address\":102}]",
+              "littab": "[{\"literal\":\"='1'\",\"address\":103}]"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "SYMTAB\nSymbol\tAddress\nX\t102\n\nLITTAB\nLiteral\tAddress\n='1'\t103"
+      }
+    },
+    {
+      "practicalNumber": 8,
+      "title": "Demonstrate the Use of macro features of C language",
+      "shortDescription": "LEX program that classifies C macro definitions: simple, with argument, and nested macros.",
+      "language": "LEX (flex)",
+      "aim": "Demonstrate the Use macro features of C language. (Also demonstrate different types of macro in C language.(simple macro, nested macro, macro with argument and macro as inline function)",
+      "objective": "(a) To understand application of macro.\n(b) To understand processing of macro by macro processor.",
+      "theory": "In programming, a macro is a mechanism for performing text-based substitutions or code generation within the source code of a program. Macros are typically used to simplify repetitive or complex coding tasks, improve code readability, and enable code reuse. Macros are supported in various programming languages and environments, although their specific implementation and syntax may vary.\n\nIn C programming language, Macros are typically defined using the #define preprocessor directive and can be used for various purposes, including creating constants, simplifying code, and enabling conditional compilation.\n\nHere's a basic overview of macros in C:\n1. Macro Definition: To define a macro, you use the #define directive followed by the macro name and its replacement value. The replacement value can be an expression, a constant, or any valid C code.\n\n#define PI 3.14155926\n\nWhere ever PI will appear in program, will be replaced by value. Similarly small functions can also be defined using macro.\n\nThe LEX program classifies macro definitions with three rules:\n1. ^#define[ \\t]+name\\(.*\\).* — macro with argument (the name is followed by parentheses, e.g. #define SQUARE(x) ((x)*(x))).\n2. ^#define[ \\t]+name[ \\t]+.* — simple macro (a plain constant, e.g. #define PI 3.14159).\n3. .*SQUARE\\(.*\\).* — nested macro (a definition that uses SQUARE inside, e.g. #define CUBE(x) (SQUARE(x)*(x))).\nNote the rule order: because LEX uses first-match-wins for equal-length matches, the CUBE line is reported as a \"Macro with argument\" (rule 1) and the nested-macro rule only catches lines that are NOT #define lines.\n\n--- Quiz (from the lab manual) ---\nQ1. Give list of languages that supports macro.\nC, C++, Assembly Language, Rust, Lisp, JavaScript (through preprocessors), PHP (through extensions/tools), Ada.\n\nQ2. List the advantages of using macro.\nCode Reusability; Reduces Program Length; Faster Execution (avoids function call overhead); Improves Readability; Easy Modification; Saves Development Time.",
+      "algorithm": "1. Start with %{ ... %} including stdio.h.\n2. Begin the rules section with %%.\n3. Rule 1: ^#define[ \\t]+[A-Za-z_][A-Za-z0-9_]*\\(.*\\).* → print \"Macro with argument\".\n4. Rule 2: ^#define[ \\t]+[A-Za-z_][A-Za-z0-9_]*[ \\t]+.* → print \"Simple Macro\".\n5. Rule 3: .*SQUARE\\(.*\\).* → print \"Nested Macro\".\n6. Rule 4: [ \\t\\n]+ → skip whitespace; rule 5: . → skip everything else.\n7. main() prints a prompt and calls yylex(); yywrap() returns 1.",
+      "procedure": "1. Create a file (e.g. macro.l) with the source code below.\n2. flex macro.l\n3. gcc lex.yy.c -o macro.exe\n4. Run macro.exe and enter these macro definitions:\n   #define PI 3.14159\n   #define SQUARE(x) ((x)*(x))\n   #define CUBE(x) (SQUARE(x)*(x))\n   #define MAX(a,b) ((a)>(b)?(a):(b))\n5. Observe each macro classified by its type.",
+      "sourceCode": "%{\n#include <stdio.h>\n%}\n\n%%\n\n^#define[ \\t]+[A-Za-z_][A-Za-z0-9_]*\\(.*\\).* {\n   printf(\"Macro with argument: %s\\n\", yytext);\n}\n\n^#define[ \\t]+[A-Za-z_][A-Za-z0-9_]*[ \\t]+.* {\n   printf(\"Simple Macro: %s\\n\", yytext);\n}\n\n.*SQUARE\\(.*\\).* {\n    printf(\"Nested Macro: %s\\n\", yytext);\n}\n\n[ \\t\\n]+ ;\n\n.    ;\n\n%%\n\nint main()\n{\n  printf(\"Enter C macro definitions:\\n\");\n  yylex();\n  return 0;\n}\n\nint yywrap()\n{\n  return 1;\n}",
+      "expectedOutput": "Enter C macro definitions:\n#define PI 3.14159\nSimple Macro: #define PI 3.14159\n#define SQUARE(x) ((x)*(x))\nMacro with argument: #define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\nMacro with argument: #define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))\nMacro with argument: #define MAX(a,b) ((a)>(b)?(a):(b))",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input (macro definitions)",
+            "kind": "text"
+          },
+          {
+            "key": "yytext",
+            "label": "Matched line",
+            "kind": "text"
+          },
+          {
+            "key": "matchedRule",
+            "label": "Matched rule",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+          "yytext": "",
+          "matchedRule": "—"
+        },
+        "steps": [
+          {
+            "line": 5,
+            "what": "The rules section begins with %%. The scanner waits for macro definitions.",
+            "why": "Each macro definition line is matched whole and classified by its shape.",
+            "how": "yylex() reads the input line by line.",
+            "result": "Scanner ready.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "Rule 1 (macro with argument) is checked against \"#define PI 3.14159\".",
+            "why": "Rule 1 requires parentheses right after the macro name — PI is followed by a space, not a parenthesis.",
+            "how": "The pattern ^#define[ \\t]+[A-Za-z_][A-Za-z0-9_]*\\(.*\\).* cannot match this line because there is no \"(\" after PI.",
+            "result": "Rule 1 does not match; rule 2 is tried next.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define PI 3.14159",
+              "matchedRule": "rule 1 (no match)"
+            },
+            "output": ""
+          },
+          {
+            "line": 11,
+            "what": "Rule 2 (simple macro) matches \"#define PI 3.14159\".",
+            "why": "A #define whose name is followed by whitespace and a value is a simple constant macro.",
+            "how": "The pattern ^#define[ \\t]+name[ \\t]+.* matches the whole line. The action prints \"Simple Macro: …\".",
+            "result": "PI classified as a SIMPLE MACRO.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define PI 3.14159",
+              "matchedRule": "rule 1 (no match)"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define PI 3.14159",
+              "matchedRule": "rule 2: ^#define name[ \\t]+.*"
+            },
+            "output": "Simple Macro: #define PI 3.14159"
+          },
+          {
+            "line": 19,
+            "what": "The newline after the PI line is skipped by [ \\t\\n]+ ;.",
+            "why": "Line endings carry no meaning for classification.",
+            "how": "The scanner moves to the next definition.",
+            "result": "Newline skipped.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define PI 3.14159",
+              "matchedRule": "rule 2: ^#define name[ \\t]+.*"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "Rule 1 matches \"#define SQUARE(x) ((x)*(x))\".",
+            "why": "The name SQUARE is immediately followed by ( — the signature of a function-like macro.",
+            "how": "The pattern captures the whole line including the argument list and body. The action prints \"Macro with argument: …\".",
+            "result": "SQUARE classified as a MACRO WITH ARGUMENT.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define SQUARE(x) ((x)*(x))",
+              "matchedRule": "rule 1: ^#define name(...)"
+            },
+            "output": "Macro with argument: #define SQUARE(x) ((x)*(x))"
+          },
+          {
+            "line": 19,
+            "what": "The newline after the SQUARE line is skipped.",
+            "why": "Whitespace rule consumes the newline.",
+            "how": "Scanner moves to the CUBE line.",
+            "result": "Newline skipped.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define SQUARE(x) ((x)*(x))",
+              "matchedRule": "rule 1: ^#define name(...)"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "Rule 1 matches \"#define CUBE(x) (SQUARE(x)*(x))\" — even though it also matches rule 3 (nested).",
+            "why": "CUBE is a macro with an argument whose body uses SQUARE — it could be called nested. But LEX applies the FIRST matching rule for equal-length matches, and rule 1 comes before rule 3.",
+            "how": "The whole line is matched by rule 1, so it is reported as \"Macro with argument\".",
+            "result": "CUBE classified as a MACRO WITH ARGUMENT (rule order decides).",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define CUBE(x) (SQUARE(x)*(x))",
+              "matchedRule": "rule 1 (first-match wins over rule 3)"
+            },
+            "output": "Macro with argument: #define CUBE(x) (SQUARE(x)*(x))"
+          },
+          {
+            "line": 19,
+            "what": "The newline after the CUBE line is skipped.",
+            "why": "Whitespace is ignored.",
+            "how": "Scanner moves to the MAX line.",
+            "result": "Newline skipped.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define CUBE(x) (SQUARE(x)*(x))",
+              "matchedRule": "rule 1 (first-match wins over rule 3)"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 7,
+            "what": "Rule 1 matches \"#define MAX(a,b) ((a)>(b)?(a):(b))\".",
+            "why": "MAX is another function-like macro, so it is classified with the argument rule.",
+            "how": "The action prints \"Macro with argument: #define MAX(a,b) ((a)>(b)?(a):(b))\".",
+            "result": "MAX classified as a MACRO WITH ARGUMENT.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "—"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "matchedRule": "rule 1"
+            },
+            "output": "Macro with argument: #define MAX(a,b) ((a)>(b)?(a):(b))"
+          },
+          {
+            "line": 28,
+            "what": "yylex() returns after the input is exhausted; main() ends.",
+            "why": "All macro definitions have been classified.",
+            "how": "The scanner reaches end of input; yywrap returns 1.",
+            "result": "Classification complete: 1 simple macro, 3 macros with argument.",
+            "before": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "matchedRule": "rule 1"
+            },
+            "after": {
+              "input": "#define PI 3.14159\n#define SQUARE(x) ((x)*(x))\n#define CUBE(x) (SQUARE(x)*(x))\n#define MAX(a,b) ((a)>(b)?(a):(b))",
+              "yytext": "",
+              "matchedRule": "end of input"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "Simple Macro: #define PI 3.14159\nMacro with argument: #define SQUARE(x) ((x)*(x))\nMacro with argument: #define CUBE(x) (SQUARE(x)*(x))\nMacro with argument: #define MAX(a,b) ((a)>(b)?(a):(b))"
+      }
+    },
+    {
+      "practicalNumber": 9,
+      "title": "Write a C program which generates Quadruple Table for the given postfix String",
+      "shortDescription": "LEX program using an operand stack that converts a postfix expression into quadruples (three-address code).",
+      "language": "LEX (flex) + C",
+      "aim": "Write a C program which generates Quadruple Table for the given postfix String.",
+      "objective": "(a) to understand and implement generation of Quadruple Table.",
+      "theory": "A Quadruple Table, also known as a Quad Table or Quadruple Table, is a data structure used in compiler design and optimization to represent intermediate code or three-address code. It is a tabular structure that stores quadruples or \"quads.\" Each quad typically represents a single operation or instruction in a high-level programming language and is used to generate target code (assembly or machine code) later in the compilation process.\n\nA quad typically consists of four fields: op, opr1, opr2, result\n1. Operator (or Operation): This field specifies the operation to be performed, such as addition, subtraction, multiplication, assignment, etc. It is usually represented as a string or an integer code.\n2. Operand 1: This field represents the first operand of the operation. It can be a variable, a constant, or an intermediate result.\n3. Operand 2: This field represents the second operand of the operation. Like Operand 1, it can be a variable, a constant, or an intermediate result.\n4. Result: This field stores the result of the operation. It can be a temporary variable that holds intermediate values.\n\nThe program uses a stack of strings. Every operand (a letter or digit) is pushed. When an operator is read, generate() pops the two top operands (op2 then op1), creates a new temporary t1, t2, … and stores the quad (op, op1, op2, result). The temporary is pushed back so it can be used as an operand by the next operator. Pressing Enter prints the whole table.\n\n--- Quiz (from the lab manual) ---\nQ1. Compare Quadruples, Triples and Indirect Triples.\nFormat: Quadruples (op, arg1, arg2, result); Triples (op, arg1, arg2); Indirect Triples use pointers to triples. Result: stored separately vs stored by position vs accessed using pointers. Memory: more / less / moderate. Code movement: easy / difficult / easy. Temporary variables: required / not required / not required. Complexity: simple / more complex / more complex.",
+      "algorithm": "1. Define globals: stack of strings, top = −1, temp = 1, quad array q, count = 0.\n2. push(s): strcpy onto stack at ++top. pop(): return stack[top--].\n3. generate(op): pop op2, pop op1; make result \"t\" + temp++; fill q[count] = (op, op1, op2, result); push(result); count++.\n4. LEX rule [a-zA-Z0-9]: build a 1-char string from yytext[0] and push it (an operand).\n5. LEX rule [+\\-*/]: call generate(yytext[0]) (an operator).\n6. LEX rule \\n: print the Quadruple Table header and every quad so far.\n7. Ignore spaces ([ \\t] ;) and any other character (. ;).",
+      "procedure": "1. Create a file (e.g. quad.l) with the source code below.\n2. flex quad.l\n3. gcc lex.yy.c -o quad\n4. Run quad and enter the postfix expression: ab+c*\n5. Press Enter. Expected output:\n   Quadruple Table\n   -----------------------------\n   Op  Arg1 Arg2 Result\n   +   a    b    t1\n   *   t1   c    t2",
+      "sourceCode": "%{\n#include <stdio.h>\n#include <string.h>\n#include <ctype.h>\n\nchar stack[20][10];\nint top = -1;\n\nint temp = 1;\n\nstruct quad\n{\n   char op;\n   char arg1[10];\n   char arg2[10];\n   char result[10];\n};\n\nstruct quad q[20];\nint count = 0;\n\nvoid push(char *s)\n{\n  strcpy(stack[++top], s);\n}\n\nchar* pop()\n{\n  return stack[top--];\n}\n\nvoid generate(char op)\n{\n  char *op2 = pop();\n  char *op1 = pop();\n  char res[10];\n\n  sprintf(res, \"t%d\", temp++);\n\n  q[count].op = op;\n  strcpy(q[count].arg1, op1);\n  strcpy(q[count].arg2, op2);\n  strcpy(q[count].result, res);\n\n  push(res);\n  count++;\n}\n%}\n\n%%\n\n[a-zA-Z0-9] {\n          char temp[2];\n          temp[0] = yytext[0];\n          temp[1] = '\\0';\n          push(temp);\n        }\n\n[+\\-*/]        {\n              generate(yytext[0]);\n          }\n\n\\n            {\n               int i;\n               printf(\"\\nQuadruple Table\\n\");\n               printf(\"-----------------------------\\n\");\n               printf(\"Op\\tArg1\\tArg2\\tResult\\n\");\n\n              for(i=0;i<count;i++)\n              {\n                printf(\"%c\\t%s\\t%s\\t%s\\n\",\n                q[i].op,\n                q[i].arg1,\n                q[i].arg2,\n                q[i].result);\n              }\n          }\n\n[ \\t]         ;\n\n.         ;\n\n%%\n\nint main()\n{\n  printf(\"Enter postfix expression: \");\n  yylex();\n  return 0;\n}\n\nint yywrap()\n{\n  return 1;\n}",
+      "expectedOutput": "Enter postfix expression: ab+c*\n\nQuadruple Table\n-----------------------------\nOp\tArg1\tArg2\tResult\n+\ta\tb\tt1\n*\tt1\tc\tt2",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Postfix input",
+            "kind": "text"
+          },
+          {
+            "key": "stack",
+            "label": "Operand stack (bottom → top)",
+            "kind": "text"
+          },
+          {
+            "key": "top",
+            "label": "top",
+            "kind": "num"
+          },
+          {
+            "key": "temp",
+            "label": "Next temporary (temp)",
+            "kind": "num"
+          },
+          {
+            "key": "count",
+            "label": "Quads generated",
+            "kind": "num"
+          },
+          {
+            "key": "quads",
+            "label": "Quadruple table",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "ab+c*",
+          "stack": "[]",
+          "top": -1,
+          "temp": 1,
+          "count": 0,
+          "quads": "[]"
+        },
+        "steps": [
+          {
+            "line": 50,
+            "what": "The rules section begins with %%. The scanner waits for a postfix expression.",
+            "why": "Each operand and operator of the postfix string is processed as it is read.",
+            "how": "yylex() reads the input; the stack and quad array are ready (top = −1, temp = 1, count = 0).",
+            "result": "Scanner ready.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 52,
+            "what": "The rule [a-zA-Z0-9] matches the operand \"a\" — it is pushed onto the stack.",
+            "why": "In postfix evaluation, operands are stored until an operator arrives.",
+            "how": "temp[0] = 'a', temp[1] = '\\0'; push(\"a\") places it at stack[0]. top becomes 0.",
+            "result": "Stack: [a]; top = 0.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"a\"]",
+              "top": 0,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 52,
+            "what": "The operand \"b\" is matched and pushed.",
+            "why": "The second operand is stored on top of the stack.",
+            "how": "push(\"b\") places it at stack[1]. top becomes 1.",
+            "result": "Stack: [a, b]; top = 1.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"a\"]",
+              "top": 0,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"a\", \"b\"]",
+              "top": 1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 59,
+            "what": "The operator \"+\" is matched — generate('+') is called.",
+            "why": "An operator combines the two topmost operands into one intermediate result.",
+            "how": "generate() pops op2 = \"b\", then op1 = \"a\".",
+            "result": "Operands popped: op1 = a, op2 = b.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"a\", \"b\"]",
+              "top": 1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 38,
+            "what": "sprintf(res, \"t%d\", temp++) creates the temporary name \"t1\" and temp becomes 2.",
+            "why": "Each operation gets a fresh temporary variable for its result.",
+            "how": "res = \"t1\".",
+            "result": "Temporary t1 created.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 1,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 2,
+              "count": 0,
+              "quads": "[]"
+            },
+            "output": ""
+          },
+          {
+            "line": 40,
+            "what": "The quad (op='+', arg1=a, arg2=b, result=t1) is stored at q[0].",
+            "why": "The operation is recorded in four-address form: op, operand1, operand2, result.",
+            "how": "q[0] = { +, a, b, t1 }. The result t1 is pushed back (line 45) and count becomes 1.",
+            "result": "Quad 1 stored; stack: [t1]; count = 1.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 2,
+              "count": 0,
+              "quads": "[]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t1\"]",
+              "top": 0,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 52,
+            "what": "The operand \"c\" is matched and pushed.",
+            "why": "The next operand of the postfix string is stored.",
+            "how": "push(\"c\") places it at stack[1]. top becomes 1.",
+            "result": "Stack: [t1, c]; top = 1.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"t1\"]",
+              "top": 0,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t1\", \"c\"]",
+              "top": 1,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 59,
+            "what": "The operator \"*\" is matched — generate('*') is called.",
+            "why": "The multiplication combines the previous intermediate result t1 with c.",
+            "how": "generate() pops op2 = \"c\", then op1 = \"t1\".",
+            "result": "Operands popped: op1 = t1, op2 = c.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"t1\", \"c\"]",
+              "top": 1,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 38,
+            "what": "sprintf creates \"t2\" and temp becomes 3.",
+            "why": "The second operation gets the next temporary.",
+            "how": "res = \"t2\".",
+            "result": "Temporary t2 created.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 2,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 3,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 40,
+            "what": "The quad (op='*', arg1=t1, arg2=c, result=t2) is stored at q[1].",
+            "why": "The multiplication uses the temporary from the addition as its first operand — this chains the quads.",
+            "how": "q[1] = { *, t1, c, t2 }. t2 is pushed; count becomes 2.",
+            "result": "Quad 2 stored; stack: [t2]; count = 2.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[]",
+              "top": -1,
+              "temp": 3,
+              "count": 1,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "output": ""
+          },
+          {
+            "line": 63,
+            "what": "The newline rule fires — the table header is printed.",
+            "why": "Pressing Enter tells the program the expression is finished and the table should be displayed.",
+            "how": "printf prints \"Quadruple Table\", the dashes and the column header Op\\tArg1\\tArg2\\tResult.",
+            "result": "Table header printed.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "output": "Quadruple Table\n-----------------------------\nOp\tArg1\tArg2\tResult"
+          },
+          {
+            "line": 69,
+            "what": "The loop prints every quad stored so far.",
+            "why": "Each row of the table is one three-address instruction.",
+            "how": "Row 1: +\\ta\\tb\\tt1 ; Row 2: *\\tt1\\tc\\tt2.",
+            "result": "Both quads printed.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "output": "+\ta\tb\tt1\n*\tt1\tc\tt2"
+          },
+          {
+            "line": 88,
+            "what": "yylex() returns and the program ends.",
+            "why": "The expression has been fully converted to intermediate code.",
+            "how": "main() finishes.",
+            "result": "Done — the quadruple table is the three-address code of ab+c*.",
+            "before": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "after": {
+              "input": "ab+c*",
+              "stack": "[\"t2\"]",
+              "top": 0,
+              "temp": 3,
+              "count": 2,
+              "quads": "[{\"op\":\"+\",\"arg1\":\"a\",\"arg2\":\"b\",\"result\":\"t1\"},{\"op\":\"*\",\"arg1\":\"t1\",\"arg2\":\"c\",\"result\":\"t2\"}]"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "Quadruple Table\n-----------------------------\nOp\tArg1\tArg2\tResult\n+\ta\tb\tt1\n*\tt1\tc\tt2"
+      }
+    },
+    {
+      "practicalNumber": 10,
+      "title": "Write a C program to parse a given string using Predictive parsing for given grammar",
+      "shortDescription": "Recursive descent predictive parser for type → simple | ^id | array [ simple ] of type.",
+      "language": "C",
+      "aim": "Write a C program to parse a given string using Predictive parsing for given grammar.\ntype → simple | ↑id | array [ simple ] of type\nsimple → integer | char | num dotdot num",
+      "objective": "(a) to understand and implement Predictive parsing",
+      "theory": "Predictive parsing is a top-down parsing technique used in compiler design to determine whether an input string conforms to a specified grammar. It constructs the parse tree from the start symbol toward the terminal symbols by selecting appropriate productions based on the current input symbol. Predictive parsing helps identify syntactic correctness of the input and is widely used in the syntax analysis phase of language processors.\n\nIn this experiment, a recursive descent predictive parser is used for parsing type declarations defined by the given grammar. The grammar specifies that a type can be a simple type, a pointer type represented by ↑id, or an array type represented by array [ simple ] of type. The simple non-terminal can derive the basic data types integer and char, as well as a subrange type represented by num dotdot num.\n\nA recursive descent parser implements each non-terminal of the grammar as a separate function. These functions call one another recursively according to the grammar productions. The parser reads the input string from left to right and attempts to match the input symbols with the grammar rules. If all symbols are successfully matched and the entire input string is consumed, the string is accepted; otherwise, it is rejected.\n\nParse trees from the manual:\n\nInput \"integer\":\n            type\n             |\n          simple\n             |\n         integer\n\nInput \"num dotdot num\":\n            type\n             |\n          simple\n         /   |   \\\n       num dotdot num\n\n--- Quiz (from the lab manual) ---\nQ1. What is predictive parsing?\nPredictive Parsing is a top-down parsing technique used in compiler design to check whether an input string follows a grammar. It selects the correct production rule using the next input symbol without backtracking. Also called LL(1) parsing; reads input from left to right; uses one lookahead symbol; faster and simple to implement.\n\nQ2. Draw the parsing hierarchy.\nPARSING → Top-Down (Predictive, Recursive Descent) | Bottom-Up (Shift-Reduce; LR, SLR, LALR).",
+      "algorithm": "1. Globals: input[100] and the token pointer (strtok result).\n2. match(expected): if the current token equals expected, advance to the next token with strtok(NULL, \" \"); otherwise print \"Parsing Error: Expected '…'\" and exit.\n3. simple(): if token is \"integer\" match it; else if \"char\" match it; else if \"num\" match \"num\", then \"dotdot\", then \"num\"; otherwise print \"Parsing Error in simple\" and exit.\n4. type(): if token is integer/char/num → simple(); else if token is \"^\" → match \"^\" then \"id\"; else if token is \"array\" → match \"array\", \"[\", simple(), \"]\", \"of\", type(); otherwise print \"Parsing Error in type\" and exit.\n5. main(): read the input line, token = strtok(input, \" \"), call type().\n6. If token == NULL after type() → print \"String Accepted.\"; otherwise print \"String Rejected.\".",
+      "procedure": "1. Create a file with the source code below (compile with any C compiler).\n2. Run the program and enter: integer → \"String Accepted.\"\n3. Enter: num dotdot num → \"String Accepted.\"\n4. Enter a wrong string (e.g. integer char) → the parser reports an error or \"String Rejected.\".",
+      "sourceCode": "#include <stdio.h>\n#include <string.h>\n#include <stdlib.h>\n\nchar input[100];\nchar *token;\n\n \nvoid type();\nvoid simple();\nvoid match(char *expected);\n\n \nvoid match(char *expected)\n{\n  if (token != NULL && strcmp(token, expected) == 0)\n  {\n     token = strtok(NULL, \" \");\n  }\n  else\n  {\n     printf(\"Parsing Error: Expected '%s'\\n\", expected);\n     exit(0);\n  }\n}\n\n \nvoid simple()\n{\n  if (token == NULL)\n  {\n     printf(\"Parsing Error\\n\");\n     exit(0);\n  }\n\n    if (strcmp(token, \"integer\") == 0)\n    {\n       match(\"integer\");\n    }\n    else if (strcmp(token, \"char\") == 0)\n    {\n       match(\"char\");\n    }\n    else if (strcmp(token, \"num\") == 0)\n    {\n       match(\"num\");\n       match(\"dotdot\");\n       match(\"num\");\n    }\n    else\n    {\n       printf(\"Parsing Error in simple\\n\");\n       exit(0);\n    }\n}\n\n \nvoid type()\n{\n  if (token == NULL)\n  {\n     printf(\"Parsing Error\\n\");\n     exit(0);\n  }\n\n    if (strcmp(token, \"integer\") == 0 ||\n       strcmp(token, \"char\") == 0 ||\n       strcmp(token, \"num\") == 0)\n    {\n       simple();\n    }\n    else if (strcmp(token, \"^\") == 0)\n    {\n       match(\"^\");\n       match(\"id\");\n    }\n    else if (strcmp(token, \"array\") == 0)\n    {\n       match(\"array\");\n       match(\"[\");\n       simple();\n       match(\"]\");\n       match(\"of\");\n       type();\n    }\n    else\n    {\n       printf(\"Parsing Error in type\\n\");\n       exit(0);\n    }\n}\n\nint main()\n{\n  printf(\"Enter input tokens separated by spaces:\\n\");\n  fgets(input, sizeof(input), stdin);\n\n    input[strcspn(input, \"\\n\")] = '\\0';\n\n    token = strtok(input, \" \");\n\n    type();\n\n    if (token == NULL)\n       printf(\"String Accepted.\\n\");\n    else\n       printf(\"String Rejected.\\n\");\n\n    return 0;\n}",
+      "expectedOutput": "Enter input tokens separated by spaces:\ninteger\nString Accepted.\n\n(also accepted: num dotdot num)",
+      "simulationData": {
+        "cells": [
+          {
+            "key": "input",
+            "label": "Input string",
+            "kind": "text"
+          },
+          {
+            "key": "token",
+            "label": "Current token",
+            "kind": "text"
+          },
+          {
+            "key": "currentFunction",
+            "label": "Function executing",
+            "kind": "text"
+          },
+          {
+            "key": "verdict",
+            "label": "Verdict",
+            "kind": "text"
+          }
+        ],
+        "initial": {
+          "input": "integer",
+          "token": "",
+          "currentFunction": "—",
+          "verdict": "—"
+        },
+        "steps": [
+          {
+            "line": 95,
+            "what": "main() prints the prompt and reads the input line with fgets.",
+            "why": "The parser needs the input string from the user.",
+            "how": "input = \"integer\". The newline is stripped with strcspn (line 98).",
+            "result": "Input captured: \"integer\".",
+            "before": {
+              "input": "integer",
+              "token": "",
+              "currentFunction": "—",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "",
+              "currentFunction": "—",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 100,
+            "what": "token = strtok(input, \" \") — the first token is extracted.",
+            "why": "strtok splits the input at spaces; the parser processes one token at a time.",
+            "how": "token = \"integer\".",
+            "result": "First token: \"integer\".",
+            "before": {
+              "input": "integer",
+              "token": "",
+              "currentFunction": "—",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "—",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 102,
+            "what": "type() is called — parsing starts from the start symbol type.",
+            "why": "The grammar says a type is either a simple type, a pointer (^id) or an array type.",
+            "how": "type() first checks that token is not NULL (line 60).",
+            "result": "Parsing begins: current function = type.",
+            "before": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "—",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "type",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 66,
+            "what": "type() checks the current token: \"integer\" matches the first branch.",
+            "why": "The production type → simple applies when the token starts a simple type (integer, char or num).",
+            "how": "Because strcmp(token, \"integer\")==0, the if-branch calls simple().",
+            "result": "Production chosen: type → simple.",
+            "before": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "type",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "type → simple",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 70,
+            "what": "simple() is called to parse the simple type.",
+            "why": "simple() must match one of: integer, char, or num dotdot num.",
+            "how": "simple() checks token == \"integer\" (line 36) — it matches.",
+            "result": "Current function: simple.",
+            "before": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "type → simple",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "simple",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 38,
+            "what": "match(\"integer\") is called: the current token equals the expected token.",
+            "why": "match() verifies that the input symbol is exactly what the grammar predicts — the essence of predictive parsing (no backtracking).",
+            "how": "The condition token != NULL && strcmp(token, \"integer\")==0 is true, so token = strtok(NULL, \" \") advances to the next token — which is NULL (end of input).",
+            "result": "Token \"integer\" consumed; token = NULL.",
+            "before": {
+              "input": "integer",
+              "token": "integer",
+              "currentFunction": "simple",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "simple",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 16,
+            "what": "simple() returns, then type() returns — the whole input was consumed.",
+            "why": "With the token pointer at NULL, every non-terminal has finished successfully.",
+            "how": "Control returns to main() after type().",
+            "result": "Parse tree built: type → simple → integer.",
+            "before": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "simple",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "—"
+            },
+            "output": ""
+          },
+          {
+            "line": 104,
+            "what": "main() checks: token == NULL → the input string is fully accepted.",
+            "why": "A string is accepted if and only if the parser consumed every token without an error.",
+            "how": "The if-branch prints \"String Accepted.\"",
+            "result": "Verdict: accepted.",
+            "before": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "—"
+            },
+            "after": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "accepted"
+            },
+            "output": ""
+          },
+          {
+            "line": 105,
+            "what": "printf prints \"String Accepted.\"",
+            "why": "The result of the parse is shown to the user.",
+            "how": "The message is written to stdout.",
+            "result": "Final output produced.",
+            "before": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "accepted"
+            },
+            "after": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "accepted"
+            },
+            "output": "String Accepted."
+          },
+          {
+            "line": 109,
+            "what": "return 0 — the program ends.",
+            "why": "Parsing is complete.",
+            "how": "main() returns 0.",
+            "result": "Done. (Try \"num dotdot num\": simple() matches num, dotdot, num in sequence — also accepted.)",
+            "before": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "accepted"
+            },
+            "after": {
+              "input": "integer",
+              "token": "NULL",
+              "currentFunction": "(returned to main)",
+              "verdict": "program ended"
+            },
+            "output": ""
+          }
+        ],
+        "finalOutput": "String Accepted."
+      }
+    }
+  ]
+}
