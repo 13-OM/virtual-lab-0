@@ -41,9 +41,7 @@ export function renderLogin(app) {
       <button class="btn btn-primary" style="width:100%" type="submit">Log In</button>
     </form>
     <div class="auth-alt">New student? <a href="#/register">Create an account</a></div>
-    <div class="auth-alt" style="font-size:12px;color:#94a3b8">
-      Demo accounts — student / Student@123 · admin / Admin@123
-    </div>
+    
   </div>`);
 
   app.appendChild(authShell(form.outerHTML));
