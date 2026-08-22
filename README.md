@@ -151,3 +151,12 @@ Example CSV:
 enrollmentNo,studentName,batch,program,status
 240230106001,Example Student,2024,Computer Engineering,active
 ```
+
+
+## Registration and practical access rules (latest update)
+
+- Students whose enrollment number is already in the faculty-managed `enrollments` collection can register immediately.
+- Students not on the official list can submit a registration request with college/institution and program details. The request appears in **Admin → Registration Requests**. Faculty approval creates the active enrollment record and enables login; rejection blocks login.
+- Faculty can add one enrollment manually or import an academic-batch CSV from **Admin → Enrollment Management**.
+- Practical access is sequential: Practical 1 is available first; each next practical unlocks only after the previous practical is completed. The rule is enforced in both the frontend and backend.
+- Removing/deactivating an enrollment prevents that student account from logging in until the enrollment becomes active again.

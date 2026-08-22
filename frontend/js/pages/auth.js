@@ -92,8 +92,22 @@ export function renderRegister(app) {
         <div class="field">
           <label>Enrollment No. <span class="muted">(required)</span></label>
           <input class="input" name="enrollment" required maxlength="30" autocomplete="off">
-          <div class="hint">Enter the official college enrollment number. It is verified against the current approved enrollment list.</div>
+          <div class="hint">If it is on the college list, you can register immediately. Otherwise your request goes to faculty for approval.</div>
         </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>College / Institution</label>
+          <input class="input" name="college" autocomplete="organization" placeholder="e.g. Government Engineering College" required>
+        </div>
+        <div class="field">
+          <label>Program / Branch</label>
+          <input class="input" name="program" placeholder="e.g. Computer Engineering" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>Academic Batch <span class="muted">(optional)</span></label>
+        <input class="input" name="batch" placeholder="e.g. 2026">
       </div>
       <div class="two-col">
         <div class="field">
@@ -123,11 +137,11 @@ export function renderRegister(app) {
     }
     btn.disabled = true; btn.textContent = 'Creating account…';
     try {
-      await API.post('/auth/register', {
+      const data = await API.post('/auth/register', {
         name: fd.get('name'), email: fd.get('email'), username: fd.get('username'),
-        password: fd.get('password'), enrollment: fd.get('enrollment') || '',
+        password: fd.get('password'), enrollment: fd.get('enrollment') || '', college: fd.get('college') || '', program: fd.get('program') || '', batch: fd.get('batch') || '',
       });
-      toast('Registration successful. You can now log in.', 'success');
+      toast(data.message || 'Registration submitted.', 'success');
       navigate('login');
     } catch (err) {
       toast(err.message, 'error');

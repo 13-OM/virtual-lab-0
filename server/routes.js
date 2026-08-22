@@ -38,8 +38,12 @@ router.get('/admin/activities', requireAdmin, Admin.activities);
 router.get('/admin/students', requireAdmin, Admin.students);
 router.get('/admin/students/:id/details', requireAdmin, Admin.studentDetails);
 router.get('/admin/enrollments', requireAdmin, Admin.enrollments);
+router.post('/admin/enrollments', requireAdmin, Admin.enrollmentCreate);
 router.post('/admin/enrollments/import', requireAdmin, Admin.importEnrollments);
 router.delete('/admin/enrollments/:id', requireAdmin, Admin.enrollmentDelete);
+router.get('/admin/registration-requests', requireAdmin, Admin.registrationRequests);
+router.post('/admin/registration-requests/:id/approve', requireAdmin, Admin.approveRegistration);
+router.post('/admin/registration-requests/:id/reject', requireAdmin, Admin.rejectRegistration);
 
 router.get('/admin/practicals', requireAdmin, Admin.practicals);
 router.post('/admin/practicals', requireAdmin, Admin.practicalCreate);   // create OR reorder {ids}

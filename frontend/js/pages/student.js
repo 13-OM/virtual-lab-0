@@ -19,7 +19,7 @@ function practicalCardsHtml(practicals) {
     const pct = pr.completed ? 100 : (p.totalSteps ? Math.round((pr.step || 0) / p.totalSteps * 100) : 0);
     const pctTxt = pr.completed ? '100%' : (pr.step || 0) + '/' + (p.totalSteps || '?') + ' steps';
     return `<div class="card prac-card">
-      <div class="pnum">Practical ${String(p.practicalNumber).padStart(2, '0')} ${pr.completed ? `<span class="done-flag">${I.check} completed</span>` : ''}</div>
+      <div class="pnum">Practical ${String(p.practicalNumber).padStart(2, '0')} ${pr.completed ? `<span class="done-flag">${I.check} completed</span>` : (p.locked ? '<span class="badge badge-yellow">🔒 locked</span>' : '<span class="badge badge-blue">Available</span>')}</div>
       <h3>${esc(p.title)}</h3>
       <div class="pdesc">${esc(p.shortDescription || '')}</div>
       <div class="pmeta">
@@ -28,8 +28,10 @@ function practicalCardsHtml(practicals) {
       </div>
       <div class="pbar ${pr.completed ? 'done' : ''}" style="margin-bottom:12px"><div class="pfill" style="width:${pct}%"></div></div>
       <div class="pfoot">
-        <span class="small muted">${p.totalSteps ? p.totalSteps + ' simulation steps' : 'No steps defined'}</span>
-        <a class="btn btn-sm btn-primary" href="#/practical/${p._id}">View Practical</a>
+        <span class="small muted">${p.locked ? 'Complete the previous practical first' : (p.totalSteps ? p.totalSteps + ' simulation steps' : 'No steps defined')}</span>
+        ${p.locked
+          ? `<button class="btn btn-sm btn-outline" disabled title="Complete the previous practical first">🔒 Locked</button>`
+          : `<a class="btn btn-sm btn-primary" href="#/practical/${p._id}">${pr.completed ? 'Review Practical' : 'View Practical'}</a>`}
       </div>
     </div>`;
   }).join('') || '<div class="empty-state"><p>No practicals available yet.</p></div>';
@@ -102,7 +104,11 @@ export async function renderPracticalPage(app, params, user) {
     const data = await API.get('/practicals/' + params.id);
     practical = data.practical;
   } catch (e) {
-    view.innerHTML = `<div class="empty-state"><p>${esc(errMsg(e))}</p></div>`;
+    if (e.status === 403 && e.data?.code === 'PRACTICAL_LOCKED') {
+      view.innerHTML = `<div class="empty-state"><h2>🔒 Practical Locked</h2><p>${esc(e.message)}</p><a class="btn btn-primary" href="#/practicals">Back to Practicals</a></div>`;
+    } else {
+      view.innerHTML = `<div class="empty-state"><p>${esc(errMsg(e))}</p></div>`;
+    }
     return;
   }
 

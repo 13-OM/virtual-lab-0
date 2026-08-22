@@ -366,6 +366,70 @@ async function enrollmentDelete(req, res) {
   return res.json({ message: `Enrollment ${row.enrollmentNo} removed from the approved list.` });
 }
 
+
+/** POST /api/admin/enrollments — add one approved enrollment. */
+async function enrollmentCreate(req, res) {
+  const in_ = req.body || {};
+  const enrollmentNo = String(in_.enrollmentNo || in_.enrollment || '').trim().toUpperCase();
+  const studentName = String(in_.studentName || in_.name || '').trim();
+  const batch = String(in_.batch || '').trim();
+  const program = String(in_.program || '').trim();
+  const status = String(in_.status || 'active').trim().toLowerCase();
+  if (!/^[A-Z0-9-]{6,30}$/.test(enrollmentNo)) return res.status(400).json({ error: 'Please enter a valid enrollment number.' });
+  if (!studentName) return res.status(400).json({ error: 'Student name is required.' });
+  if (!batch) return res.status(400).json({ error: 'Academic batch is required.' });
+  if (!['active','admitted','alumni','inactive'].includes(status)) return res.status(400).json({ error: 'Invalid enrollment status.' });
+  const existing = await db.findOne('enrollments', { enrollmentNo });
+  const doc = { enrollmentNo, studentName, batch, program, status, updatedAt: now(), updatedBy: req.user.username };
+  if (existing) await db.update('enrollments', { _id: existing._id }, doc);
+  else await db.insert('enrollments', { ...doc, createdAt: now() });
+  await logActivityFor('add_enrollment', { enrollmentNo, studentName, batch, program, status }, req.user);
+  return res.status(existing ? 200 : 201).json({ message: existing ? 'Enrollment updated.' : 'Enrollment added.', enrollment: { ...(existing || {}), ...doc, _id: existing?._id } });
+}
+
+/** GET /api/admin/registration-requests */
+async function registrationRequests(req, res) {
+  const status = String(req.query.status || 'pending').trim().toLowerCase();
+  const filter = ['pending','approved','rejected'].includes(status) ? { status } : {};
+  const rows = await db.find('registrationRequests', filter, { sort: { createdAt: -1 }, limit: 500 });
+  return res.json({ requests: rows });
+}
+
+/** POST /api/admin/registration-requests/:id/approve */
+async function approveRegistration(req, res) {
+  const request = await db.findOne('registrationRequests', { _id: req.params.id });
+  if (!request) return res.status(404).json({ error: 'Registration request not found.' });
+  if (request.status !== 'pending') return res.status(400).json({ error: 'This request has already been processed.' });
+  const body = req.body || {};
+  const batch = String(body.batch || request.batch || '').trim();
+  const program = String(body.program || request.program || '').trim();
+  const college = String(body.college || request.college || '').trim();
+  if (!batch) return res.status(400).json({ error: 'Academic batch is required for approval.' });
+  if (!program) return res.status(400).json({ error: 'Program is required for approval.' });
+  const user = await db.findOne('users', { _id: request.userId });
+  if (!user || user.role !== 'student') return res.status(404).json({ error: 'Student account for this request was not found.' });
+  const existingEnrollment = await db.findOne('enrollments', { enrollmentNo: request.enrollment });
+  const enrollmentDoc = { enrollmentNo: request.enrollment, studentName: request.name, batch, program, college, status: 'active', updatedAt: now(), updatedBy: req.user.username };
+  if (existingEnrollment) await db.update('enrollments', { _id: existingEnrollment._id }, enrollmentDoc);
+  else await db.insert('enrollments', { ...enrollmentDoc, createdAt: now() });
+  await db.update('users', { _id: user._id }, { accountStatus: 'active', batch, program, college, updatedAt: now() });
+  await db.update('registrationRequests', { _id: request._id }, { status: 'approved', reviewedAt: now(), reviewedBy: req.user.username, batch, program, college, updatedAt: now() });
+  await logActivityFor('registration_approved', { studentId: user._id, enrollment: request.enrollment, batch, program }, req.user);
+  return res.json({ message: `${user.name} has been approved and can now log in.` });
+}
+
+/** POST /api/admin/registration-requests/:id/reject */
+async function rejectRegistration(req, res) {
+  const request = await db.findOne('registrationRequests', { _id: req.params.id });
+  if (!request) return res.status(404).json({ error: 'Registration request not found.' });
+  if (request.status !== 'pending') return res.status(400).json({ error: 'This request has already been processed.' });
+  const user = await db.findOne('users', { _id: request.userId });
+  if (user) await db.update('users', { _id: user._id }, { accountStatus: 'rejected', updatedAt: now() });
+  await db.update('registrationRequests', { _id: request._id }, { status: 'rejected', reviewedAt: now(), reviewedBy: req.user.username, updatedAt: now() });
+  await logActivityFor('registration_rejected', { studentId: request.userId, enrollment: request.enrollment }, req.user);
+  return res.json({ message: 'Registration request rejected.' });
+}
+
 // ---------------------------------------------------------------- helpers
 
 function validatePracticalInput(in_) {
@@ -401,7 +465,8 @@ function validatePracticalInput(in_) {
 }
 
 module.exports = {
-  stats, activities, enrollments, importEnrollments, enrollmentDelete,
+  stats, activities, enrollments, importEnrollments, enrollmentCreate, enrollmentDelete,
+  registrationRequests, approveRegistration, rejectRegistration,
   practicals, practicalGet, practicalCreate, practicalUpdate, practicalDelete,
   reorder, history, restore,
   students, studentDetails, studentResetPassword, studentDelete,

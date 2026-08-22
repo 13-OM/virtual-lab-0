@@ -73,6 +73,11 @@ if (!student) {
 } else {
   console.log('OK  demo student exists');
 }
+const demoEnrollment = await db.findOne('enrollments', { enrollmentNo: 'DEMO-2026' });
+if (!demoEnrollment) {
+  await db.insert('enrollments', { enrollmentNo: 'DEMO-2026', studentName: 'Demo Student', batch: '2026', program: 'Computer Engineering', status: 'active', createdAt: now(), updatedAt: now(), updatedBy: 'seed' });
+  console.log('OK  demo enrollment created');
+}
 
 // --- 3. practicals from the lab manual ----------------------------------------
 if (!fs.existsSync(config.SEED_FILE)) {

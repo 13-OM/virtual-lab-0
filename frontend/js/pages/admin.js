@@ -16,6 +16,7 @@ const adminNav = [
   { href: 'admin/practicals', label: 'Practicals', icon: I.book },
   { href: 'admin/students', label: 'Students', icon: I.users },
   { href: 'admin/enrollments', label: 'Enrollment Management', icon: I.users },
+  { href: 'admin/registration-requests', label: 'Registration Requests', icon: I.clock },
   { href: 'admin/activities', label: 'Activity Log', icon: I.activity },
   { href: 'dashboard', label: '← Student View', icon: I.flask },
 ];
@@ -43,6 +44,7 @@ export async function renderAdmin(section, params, user) {
       else if (section === 'practicalEdit') await pageEditor(view, params.id);
       else if (section === 'students') await pageStudents(view);
       else if (section === 'enrollments') await pageEnrollments(view);
+      else if (section === 'registrationRequests') await pageRegistrationRequests(view);
       else if (section === 'activities') await pageActivities(view);
     } catch (e) {
       if (e.data && e.data.code === 'PASSWORD_CHANGE_REQUIRED') {
@@ -580,8 +582,8 @@ async function pageEditor(view, id) {
 async function pageEnrollments(view) {
   view.innerHTML = `
     <div class="page-head"><div><h1>Enrollment Management</h1>
-      <div class="crumb">Import the official college enrollment list once per academic batch. Students can then register automatically without individual approval.</div></div>
-      <a class="btn btn-outline" href="#/admin/students">${I.users} Students</a></div>
+      <div class="crumb">Import a batch or add one enrollment. Students on this approved list register automatically.</div></div>
+      <div style="display:flex;gap:8px"><a class="btn btn-primary" href="#/admin/registration-requests">Registration Requests</a><button class="btn btn-outline" id="add-enrollment">${I.plus} Add Enrollment</button><a class="btn btn-outline" href="#/admin/students">${I.users} Students</a></div></div>
     <div class="grid grid-2" style="align-items:start">
       <div class="panel">
         <div class="panel-head"><span>Import Academic Batch</span></div>
@@ -617,6 +619,22 @@ async function pageEnrollments(view) {
   const result = view.querySelector('#import-result');
   const tbody = view.querySelector('#enroll-rows');
   const search = view.querySelector('#enroll-search');
+
+  view.querySelector('#add-enrollment').onclick = () => {
+    const m = modal('Add / Update Enrollment', `
+      <div class="field"><label>Enrollment Number</label><input class="input" id="one-enroll" maxlength="30" required></div>
+      <div class="field"><label>Student Name</label><input class="input" id="one-name" required></div>
+      <div class="two-col"><div class="field"><label>Academic Batch</label><input class="input" id="one-batch" placeholder="2026" required></div><div class="field"><label>Program</label><input class="input" id="one-program" placeholder="Computer Engineering"></div></div>
+      <div class="field"><label>Status</label><select class="input" id="one-status"><option value="active">active</option><option value="admitted">admitted</option><option value="alumni">alumni</option><option value="inactive">inactive</option></select></div>`);
+    const ok = h('<button class="btn btn-primary">Save Enrollment</button>');
+    m.querySelector('.modal-foot').appendChild(ok);
+    ok.onclick = async () => {
+      try {
+        const data = await API.post('/admin/enrollments', { enrollmentNo:m.querySelector('#one-enroll').value, studentName:m.querySelector('#one-name').value, batch:m.querySelector('#one-batch').value, program:m.querySelector('#one-program').value, status:m.querySelector('#one-status').value });
+        toast(data.message || 'Enrollment saved.', 'success'); m.remove(); await load();
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  };
 
   function parseCSV(text) {
     const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim() !== '');
@@ -659,6 +677,35 @@ async function pageEnrollments(view) {
   search.addEventListener('input',()=>{clearTimeout(search._t);search._t=setTimeout(load,250);});
   tbody.addEventListener('click',async e=>{const b=e.target.closest('[data-del]');if(!b)return;const tr=b.closest('tr');if(!await confirmDialog('Remove Enrollment','Remove '+esc(tr.children[0].textContent)+' from the approved list? Existing student accounts are not deleted.','Remove'))return;try{await API.del('/admin/enrollments/'+tr.dataset.id);tr.remove();toast('Enrollment removed.','success');}catch(err){toast(err.message,'error');}});
   await load();
+}
+
+// ------------------------------------------------------------ registration requests
+async function pageRegistrationRequests(view) {
+  view.innerHTML = '<div class="muted">Loading registration requests…</div>';
+  const data = await API.get('/admin/registration-requests?status=pending');
+  const rows = data.requests || [];
+  view.innerHTML = `
+    <div class="page-head"><div><h1>Registration Requests</h1><div class="crumb">Students whose enrollment is not on the official list wait here for faculty approval.</div></div><a class="btn btn-outline" href="#/admin/enrollments">Enrollment Management</a></div>
+    <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Enrollment</th><th>College</th><th>Program</th><th>Batch</th><th>Requested</th><th style="text-align:right">Actions</th></tr></thead><tbody id="request-rows">${rows.map(r => `<tr data-id="${esc(r._id)}"><td><b>${esc(r.name)}</b><div class="small muted">${esc(r.email)}</div></td><td>${esc(r.enrollment)}</td><td>${esc(r.college || '—')}</td><td>${esc(r.program || '—')}</td><td>${esc(r.batch || '—')}</td><td class="small muted">${fmtDate(r.createdAt)}</td><td style="text-align:right"><button class="btn btn-sm btn-primary" data-act="approve">Approve</button> <button class="btn btn-sm btn-ghost" data-act="reject" style="color:var(--danger)">Reject</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">No pending registration requests.</td></tr>'}</tbody></table></div></div>`;
+  const tbody = view.querySelector('#request-rows');
+  tbody.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-act]'); if (!btn) return;
+    const tr = btn.closest('tr'); const id = tr.dataset.id;
+    if (btn.dataset.act === 'reject') {
+      if (!await confirmDialog('Reject Registration', 'Reject this registration request? The student will not be able to log in.', 'Reject')) return;
+      try { await API.post('/admin/registration-requests/' + id + '/reject', {}); toast('Registration request rejected.', 'success'); tr.remove(); } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    const m = modal('Approve Registration', `
+      <p class="muted small">Approve <b>${esc(tr.children[0].querySelector('b')?.textContent || '')}</b>. This creates an active enrollment record and enables login.</p>
+      <div class="two-col"><div class="field"><label>Academic Batch</label><input class="input" id="approve-batch" value="${esc(tr.children[4].textContent.trim() === '—' ? '' : tr.children[4].textContent.trim())}" required></div><div class="field"><label>Program</label><input class="input" id="approve-program" value="${esc(tr.children[3].textContent.trim() === '—' ? '' : tr.children[3].textContent.trim())}" required></div></div>
+      <div class="field"><label>College / Institution</label><input class="input" id="approve-college" value="${esc(tr.children[2].textContent.trim() === '—' ? '' : tr.children[2].textContent.trim())}" required></div>`);
+    const ok = h('<button class="btn btn-primary">Approve & Enable Login</button>'); m.querySelector('.modal-foot').appendChild(ok);
+    ok.onclick = async () => {
+      try { await API.post('/admin/registration-requests/' + id + '/approve', { batch:m.querySelector('#approve-batch').value, program:m.querySelector('#approve-program').value, college:m.querySelector('#approve-college').value }); toast('Student approved. They can now log in.', 'success'); m.remove(); tr.remove(); }
+      catch (err) { toast(err.message, 'error'); }
+    };
+  });
 }
 
 // ------------------------------------------------------------ students

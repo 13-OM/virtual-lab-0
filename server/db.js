@@ -71,6 +71,7 @@ async function load(dataFile) {
     progress: database.collection('progress'),
     activities: database.collection('activities'),
     enrollments: database.collection('enrollments'),
+    registrationRequests: database.collection('registrationRequests'),
   };
 
   await Promise.all([
@@ -84,6 +85,8 @@ async function load(dataFile) {
     collections.activities.createIndex({ userId: 1, createdAt: -1 }, { name: 'activities_user_createdAt' }),
     collections.enrollments.createIndex({ enrollmentNo: 1 }, { unique: true, name: 'uniq_enrollment_number' }),
     collections.enrollments.createIndex({ batch: 1 }, { name: 'enrollments_batch' }),
+    collections.registrationRequests.createIndex({ createdAt: -1 }, { name: 'registrationRequests_createdAt' }),
+    collections.registrationRequests.createIndex({ status: 1, createdAt: -1 }, { name: 'registrationRequests_status_createdAt' }),
     collections.practicals.createIndex(
       { practicalNumber: 1 },
       { unique: true, name: 'uniq_practical_number' }
