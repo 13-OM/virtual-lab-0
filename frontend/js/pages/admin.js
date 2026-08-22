@@ -15,7 +15,7 @@ const adminNav = [
   { href: 'admin', label: 'Dashboard', icon: I.dash },
   { href: 'admin/practicals', label: 'Practicals', icon: I.book },
   { href: 'admin/students', label: 'Students', icon: I.users },
-  { href: 'admin/enrollments', label: 'Enrollment List', icon: I.users },
+  { href: 'admin/enrollments', label: 'Enrollment Management', icon: I.users },
   { href: 'admin/activities', label: 'Activity Log', icon: I.activity },
   { href: 'dashboard', label: '← Student View', icon: I.flask },
 ];
@@ -145,11 +145,48 @@ function feedItem(a) {
   const label = a.action.replace(/_/g, ' ');
   const extra = a.details && (a.details.title || a.details.practicalNumber || a.details.username)
     ? ` <b>${esc(a.details.title || a.details.practicalNumber || a.details.username || '')}</b>` : '';
+  const person = a.userId
+    ? `<button class="link-btn activity-student" data-student-id="${esc(a.userId)}" title="View student details">${esc(a.name || 'Guest')}</button>`
+    : `<b>${esc(a.name || 'Guest')}</b>`;
   return `<div class="feed-item">
     <div class="fi-ic" style="background:${colors[a.action] || '#f1f5f9;color:#475569'}">${icons[a.action] || '•'}</div>
-    <div style="min-width:0"><div class="fi-tx"><b>${esc(a.name || 'Guest')}</b> ${esc(label)}${extra}</div>
+    <div style="min-width:0"><div class="fi-tx">${person} ${esc(label)}${extra}</div>
     <div class="fi-time">${fmtDate(a.createdAt)}</div></div></div>`;
 }
+
+async function showStudentDetails(studentId) {
+  try {
+    const data = await API.get('/admin/students/' + encodeURIComponent(studentId) + '/details');
+    const s = data.student || {};
+    const e = data.enrollment || {};
+    const summary = data.summary || {};
+    const progress = data.progress || [];
+    const activities = data.activities || [];
+    const current = summary.currentPractical;
+
+    const progressRows = progress.map((p, i) => {
+      const pct = p.totalSteps ? Math.min(100, Math.round((p.step / p.totalSteps) * 100)) : (p.completed ? 100 : 0);
+      const status = p.completed ? '<span class="badge badge-green">Completed</span>'
+        : (p.step > 0 ? '<span class="badge badge-blue">In progress</span>' : (i === progress.findIndex(x => !x.completed) ? '<span class="badge badge-yellow">Current</span>' : '<span class="badge">Locked</span>'));
+      return `<tr><td><b>Practical ${esc(p.practicalNumber)}</b><div class="small muted">${esc(p.title)}</div></td><td>${status}</td><td>${p.step}/${p.totalSteps}</td><td>${pct}%</td><td class="small muted">${fmtDate(p.completedAt || p.lastAccessed)}</td></tr>`;
+    }).join('') || '<tr><td colspan="5" class="muted">No practical progress recorded.</td></tr>';
+
+    const recent = activities.slice(0, 10).map(a => `<div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>${esc(String(a.action || '').replace(/_/g,' '))}</b><span class="small muted"> · ${fmtDate(a.createdAt)}</span>${a.details && a.details.title ? `<div class="small muted">${esc(a.details.title)}</div>` : ''}</div>`).join('') || '<div class="muted">No activity recorded.</div>';
+
+    const m = modal('Student Details', `<div class="modal-lg">
+      <div class="two-col" style="gap:12px">
+        <div class="panel" style="box-shadow:none;margin:0"><div class="small muted">Student</div><h2 style="margin:4px 0 8px">${esc(s.name || '—')}</h2><div class="small"><b>Username:</b> ${esc(s.username || '—')}<br><b>Email:</b> ${esc(s.email || '—')}<br><b>Enrollment:</b> ${esc(s.enrollment || '—')}</div></div>
+        <div class="panel" style="box-shadow:none;margin:0"><div class="small muted">Academic information</div><h3 style="margin:4px 0 8px">${esc(e.batch || 'Batch not recorded')}</h3><div class="small"><b>Program:</b> ${esc(e.program || '—')}<br><b>Status:</b> ${esc(e.status || '—')}<br><b>Registered:</b> ${fmtDate(s.createdAt)}<br><b>Last login:</b> ${fmtDate(s.lastLoginAt)}</div></div>
+      </div>
+      <div class="panel" style="box-shadow:none;margin-top:12px"><div class="panel-head"><span>Overall Progress</span><span class="spacer"></span><b>${summary.completedPracticals || 0}/${summary.totalPracticals || 0} completed (${summary.completionPercent || 0}%)</b></div><div class="small"><b>Current practical:</b> ${current ? `Practical ${esc(current.practicalNumber)} — ${esc(current.title)} (${esc(current.status)})` : 'All practicals completed 🎉'}</div></div>
+      <div class="panel" style="box-shadow:none;margin-top:12px"><div class="panel-head"><span>Practical Progress</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Practical</th><th>Status</th><th>Step</th><th>Progress</th><th>Last activity</th></tr></thead><tbody>${progressRows}</tbody></table></div></div>
+      <div class="panel" style="box-shadow:none;margin-top:12px"><div class="panel-head"><span>Recent Student Activity</span></div>${recent}</div>
+    </div>`);
+    const modalBox = m.querySelector('.modal');
+    if (modalBox) modalBox.classList.add('modal-lg');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
 
 // ------------------------------------------------------------ practicals list
 async function pagePracticals(view) {
@@ -690,6 +727,7 @@ async function pageActivities(view) {
   const feed = (data.activities || []).map(a => feedItem(a)).join('') || '<div class="muted" style="padding:20px">No activity recorded yet.</div>';
   view.innerHTML = `
     <div class="page-head"><div><h1>Activity Log</h1>
-      <div class="crumb">Who did what — logins, completions and content changes</div></div></div>
+      <div class="crumb">Who did what — logins, completions and content changes. Click a student's name to see complete progress and practical details.</div></div></div>
     <div class="panel"><div class="feed">${feed}</div></div>`;
+  view.querySelectorAll('.activity-student').forEach(btn => btn.addEventListener('click', () => showStudentDetails(btn.dataset.studentId)));
 }

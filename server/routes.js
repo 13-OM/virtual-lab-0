@@ -36,6 +36,7 @@ router.post('/progress', requireAuth, Progress.save);
 router.get('/admin/stats', requireAdmin, Admin.stats);
 router.get('/admin/activities', requireAdmin, Admin.activities);
 router.get('/admin/students', requireAdmin, Admin.students);
+router.get('/admin/students/:id/details', requireAdmin, Admin.studentDetails);
 router.get('/admin/enrollments', requireAdmin, Admin.enrollments);
 router.post('/admin/enrollments/import', requireAdmin, Admin.importEnrollments);
 router.delete('/admin/enrollments/:id', requireAdmin, Admin.enrollmentDelete);

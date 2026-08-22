@@ -228,6 +228,57 @@ async function students(req, res) {
   return res.json({ students: rows });
 }
 
+/** GET /api/admin/students/{id}/details — complete student progress/activity overview. */
+async function studentDetails(req, res) {
+  const u = await db.findOne('users', { _id: req.params.id });
+  if (!u || u.role !== 'student') return res.status(404).json({ error: 'Student not found.' });
+
+  const enrollmentNo = String(u.enrollment || '').trim().toUpperCase();
+  const enrollment = enrollmentNo ? await db.findOne('enrollments', { enrollmentNo }) : null;
+  const practicals = await db.find('practicals', {}, { sort: { order: 1, practicalNumber: 1 } });
+  const progressRows = await db.find('progress', { userId: u._id }, { sort: { lastAccessed: -1 } });
+  const progressMap = {};
+  for (const p of progressRows) progressMap[p.practicalId] = p;
+
+  const practicalProgress = practicals.map((p, index) => {
+    const pr = progressMap[p._id] || {};
+    return {
+      practicalId: p._id,
+      practicalNumber: p.practicalNumber,
+      title: p.title,
+      order: p.order || index + 1,
+      step: parseInt(pr.step, 10) || 0,
+      totalSteps: String(p.sourceCode || '').replace(/\r\n?/g, '\n').split('\n').length,
+      completed: !!pr.completed,
+      completedAt: pr.completedAt || null,
+      lastAccessed: pr.lastAccessed || null,
+    };
+  });
+
+  const firstIncomplete = practicalProgress.find(p => !p.completed);
+  const completedCount = practicalProgress.filter(p => p.completed).length;
+  const currentPractical = firstIncomplete ? {
+    practicalNumber: firstIncomplete.practicalNumber,
+    title: firstIncomplete.title,
+    status: firstIncomplete.step > 0 ? 'in-progress' : 'not-started',
+  } : null;
+
+  const activities = await db.find('activities', { userId: u._id }, { sort: { createdAt: -1 }, limit: 50 });
+
+  return res.json({
+    student: {
+      _id: u._id, name: u.name, username: u.username, email: u.email,
+      enrollment: enrollmentNo || '', createdAt: u.createdAt || null, lastLoginAt: u.lastLoginAt || null,
+    },
+    enrollment: enrollment || null,
+    summary: { totalPracticals: practicalProgress.length, completedPracticals: completedCount,
+      completionPercent: practicalProgress.length ? Math.round((completedCount / practicalProgress.length) * 100) : 0,
+      currentPractical },
+    progress: practicalProgress,
+    activities,
+  });
+}
+
 /** POST /api/admin/students/{id}/reset-password — {newPassword} */
 async function studentResetPassword(req, res) {
   const pw = String((req.body || {}).newPassword || '');
@@ -353,5 +404,5 @@ module.exports = {
   stats, activities, enrollments, importEnrollments, enrollmentDelete,
   practicals, practicalGet, practicalCreate, practicalUpdate, practicalDelete,
   reorder, history, restore,
-  students, studentResetPassword, studentDelete,
+  students, studentDetails, studentResetPassword, studentDelete,
 };

@@ -175,6 +175,9 @@ h3 { font-size: 16px; }
   padding: 3px 9px; border-radius: 999px; text-transform: uppercase;
 }
 .badge-blue { background: var(--primary-soft); color: var(--primary); }
+.badge-yellow { background: #fffbeb; color: #b45309; }
+.link-btn { border: 0; background: transparent; padding: 0; margin: 0; font: inherit; font-weight: 700; color: var(--primary); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.link-btn:hover { opacity: .8; }
 .badge-green { background: var(--ok-soft); color: var(--ok); }
 .badge-amber { background: #fffbeb; color: var(--warn); }
 .badge-red { background: var(--danger-soft); color: var(--danger); }
